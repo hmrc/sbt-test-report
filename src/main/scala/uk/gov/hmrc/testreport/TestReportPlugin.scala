@@ -29,6 +29,8 @@ object TestReportPlugin extends AutoPlugin {
 
   import autoImport.*
 
+  override def trigger = allRequirements
+
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
     testReport := generateTestReport().value,
     outputDirectory := (Keys.target.value / "test-reports" / "accessibility-assessment"),

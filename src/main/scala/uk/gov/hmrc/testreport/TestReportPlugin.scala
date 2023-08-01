@@ -34,11 +34,11 @@ object TestReportPlugin extends AutoPlugin {
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
     testReport := generateTestReport().value,
     outputDirectory := (Keys.target.value / "test-reports" / "accessibility-assessment"),
-    outputFile := (outputDirectory.value / "index.html")
+    outputFile := (outputDirectory.value / "html-report" /  "index.html")
   )
 
   private def generateTestReport(): Def.Initialize[Task[Unit]] = Def.task {
-    os.makeDir.all(os.Path(outputDirectory.value / "assets"))
+    os.makeDir.all(os.Path(outputDirectory.value / "html-report" / "assets"))
 
     val assets = List(
       "enum.1.13.5.min.js",
@@ -52,7 +52,7 @@ object TestReportPlugin extends AutoPlugin {
 
     assets.foreach { fileName =>
       os.write.over(
-        os.Path(outputDirectory.value / "assets" / fileName),
+        os.Path(outputDirectory.value / "html-report" / "assets" / fileName),
         os.read(os.resource(getClass.getClassLoader) / "assets" / fileName)
       )
     }

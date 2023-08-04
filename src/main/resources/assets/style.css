@@ -111,3 +111,10 @@ td[data-impact="critical"] {
   color: #942514;
   background: #f6d7d2;
 }
+
+tr.filtered-violation td {
+  pointer-events: none;
+  font-weight: normal;
+  color: #4d4d4d !important;
+  background-color: #efeaea !important;
+}

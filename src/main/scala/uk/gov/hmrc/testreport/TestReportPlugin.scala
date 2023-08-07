@@ -18,6 +18,8 @@ package uk.gov.hmrc.testreport
 
 import sbt.*
 import scalatags.Text.all.*
+import com.typesafe.config.ConfigFactory
+import scala.jdk.CollectionConverters.*
 
 object TestReportPlugin extends AutoPlugin {
 
@@ -34,7 +36,7 @@ object TestReportPlugin extends AutoPlugin {
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
     testReport := generateTestReport().value,
     outputDirectory := (Keys.target.value / "test-reports" / "accessibility-assessment"),
-    outputFile := (outputDirectory.value / "html-report" /  "index.html")
+    outputFile := (outputDirectory.value / "html-report" / "index.html")
   )
 
   private def generateTestReport(): Def.Initialize[Task[Unit]] = Def.task {
@@ -70,6 +72,27 @@ object TestReportPlugin extends AutoPlugin {
     val axeResultsTotalCount      = axeResults.count()
     val axeResultsViolationsCount = axeResults.map(result => result("violations").arr.length).sum
     val reportDocumentationUrl    = "https://github.com/hmrc/accessibility-assessment/blob/main/docs/READING-THE-REPORT.md"
+
+    val customFiltersFileName     = "custom-filters.json"
+    def hasCustomFilters: Boolean = os.exists(os.pwd / customFiltersFileName)
+    case class UrlFilter(url: String, reason: String)
+    lazy val customUrlFilters     = ConfigFactory
+      .parseFile(new java.io.File(customFiltersFileName))
+      .getConfigList("url-filters")
+      .asScala
+      .map(config =>
+        UrlFilter(
+          config.getString("url"),
+          config.getString("reason")
+        )
+      )
+
+    def urlIsFiltered(url: String): Boolean = customUrlFilters.exists(_.url == url)
+
+    def checkUrlForFilter(url: String): String = {
+      val filtered = customUrlFilters.filter(_.url == url)
+      if (filtered.isEmpty) "" else filtered.head.reason
+    }
 
     os.write.over(
       os.Path(outputFile.value),
@@ -129,7 +152,6 @@ object TestReportPlugin extends AutoPlugin {
                     th("Description ", a(href := s"$reportDocumentationUrl#description", "(?)", target := "_blank")),
                     th("HTML ", a(href := s"$reportDocumentationUrl#usnippet", "(?)", target := "_blank")),
                     th("Impact ", a(href := s"$reportDocumentationUrl#severity", "(?)", target := "_blank")),
-                    th("Known issue ", a(href := s"$reportDocumentationUrl#known-issue", "(?)", target := "_blank")),
                     th(
                       "Further information ",
                       a(href := s"$reportDocumentationUrl#further-information", "(?)", target := "_blank")
@@ -141,6 +163,9 @@ object TestReportPlugin extends AutoPlugin {
                     val violations = result("violations").arr
                     violations.map { violation =>
                       tr(
+                        if (hasCustomFilters && urlIsFiltered(result("url").str))
+                          cls := "filtered-violation"
+                        else cls := "",
                         td(result("url").str),
                         td(a(href := violation("helpUrl").str, violation("id").str, target := "_blank")),
                         td(violation("description").str),
@@ -150,9 +175,9 @@ object TestReportPlugin extends AutoPlugin {
                           )
                         ),
                         td(data.impact := violation("impact").str, violation("impact").str),
-//                        td(violation("impact").str),
-                        td("PLACEHOLDER"),
-                        td("PLACEHOLDER")
+                        if (hasCustomFilters)
+                          td(checkUrlForFilter(result("url").str))
+                        else td("")
                       )
                     }
                   }
@@ -165,5 +190,4 @@ object TestReportPlugin extends AutoPlugin {
       )
     )
   }
-
 }

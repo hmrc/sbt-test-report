@@ -41,7 +41,7 @@ object TestReportPlugin extends AutoPlugin {
 
   private def generateTestReport(): Def.Initialize[Task[Unit]] = Def.task {
     val log = sbt.Keys.streams.value.log
-    log.info("Generating accessibility assessment report")
+    log.info("Generating accessibility assessment report ...")
 
     os.makeDir.all(os.Path(outputDirectory.value / "html-report" / "assets"))
 

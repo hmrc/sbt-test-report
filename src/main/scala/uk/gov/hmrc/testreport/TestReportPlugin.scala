@@ -199,7 +199,7 @@ object TestReportPlugin extends AutoPlugin {
         )
       )
     } else {
-      log.error("No axe results found to generate accessibility report.")
+      log.error("No axe results found to generate accessibility assessment report.")
     }
   }
 }

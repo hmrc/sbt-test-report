@@ -40,32 +40,31 @@ object TestReportPlugin extends AutoPlugin {
   )
 
   private def generateTestReport(): Def.Initialize[Task[Unit]] = Def.task {
-    val log = sbt.Keys.streams.value.log
+    val log                 = sbt.Keys.streams.value.log
+    val axeResultsDirectory = os.Path(outputDirectory.value / "axe-results")
 
-    os.makeDir.all(os.Path(outputDirectory.value / "html-report" / "assets"))
-
-    val assets = List(
-      "enum.1.13.5.min.js",
-      "jquery.1.13.5.dataTables.min.css",
-      "jquery.1.13.5.dataTables.min.js",
-      "jquery.3.7.0.min.js",
-      "dataTables.js",
-      "reset.css",
-      "style.css"
-    )
-
-    assets.foreach { fileName =>
-      os.write.over(
-        os.Path(outputDirectory.value / "html-report" / "assets" / fileName),
-        os.read(os.resource(getClass.getClassLoader) / "assets" / fileName)
-      )
-    }
-
-    val axeResultsDirectory    = os.Path(outputDirectory.value / "axe-results")
     def hasAxeResults: Boolean = os.exists(axeResultsDirectory)
 
     if (hasAxeResults) {
       log.info("Generating accessibility assessment report ...")
+      os.makeDir.all(os.Path(outputDirectory.value / "html-report" / "assets"))
+
+      val assets = List(
+        "enum.1.13.5.min.js",
+        "jquery.1.13.5.dataTables.min.css",
+        "jquery.1.13.5.dataTables.min.js",
+        "jquery.3.7.0.min.js",
+        "dataTables.js",
+        "reset.css",
+        "style.css"
+      )
+
+      assets.foreach { fileName =>
+        os.write.over(
+          os.Path(outputDirectory.value / "html-report" / "assets" / fileName),
+          os.read(os.resource(getClass.getClassLoader) / "assets" / fileName)
+        )
+      }
 
       val axeResults = os.list.stream(axeResultsDirectory).filter(os.isDir).map { timestampDirectory =>
         ujson.read(os.read(timestampDirectory / "axeResults.json"))

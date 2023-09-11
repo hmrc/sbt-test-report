@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Accessibility assessment report</title>
+    <link rel="stylesheet" href="./assets/style.css">
+    <script src="./assets/list.min.js"></script>
+    <script src="./assets/report.js"></script>
+</head>
+<body onload="init()">
+
+<header class="border-bottom" role="banner">
+    <!-- TODO: Templatise this too-->
+    <div class="banner region wrapper">
+        <p>Generated from build <a href="#">{{build number or if local empty}}</a> ({{Browser name}}) of <a href="#">{{project
+            name}}</a> on
+            <time datetime="2023-09-05T09:22:05.641+01:00">{{date of assessment}}</time>
+        </p>
+    </div>
+    <div class="repel region wrapper"><a class="brand" href="/" aria-label="Accessibility assessment">
+        <svg width="100" height="100" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,0 C77.6142375,0 100,22.3857625 100,50 C100,77.6142375 77.6142375,100 50,100 C22.3857625,100 0,77.6142375 0,50 C0,22.3857625 22.3857625,0 50,0 Z M50,9.1796875 C27.4555639,9.1796875 9.1796875,27.4555639 9.1796875,50 C9.1796875,72.5444361 27.4555639,90.8203125 50,90.8203125 C72.5444361,90.8203125 90.8203125,72.5444361 90.8203125,50 C90.8203125,27.4555639 72.5444361,9.1796875 50,9.1796875 Z M50,16.9921875 C68.2297115,16.9921875 83.0078125,31.7702885 83.0078125,50 C83.0078125,68.2297115 68.2297115,83.0078125 50,83.0078125 C31.7702885,83.0078125 16.9921875,68.2297115 16.9921875,50 C16.9921875,31.7702885 31.7702885,16.9921875 50,16.9921875 Z M66.796875,39.453125 L33.203125,39.453125 C31.0457627,39.453125 29.296875,41.2020127 29.296875,43.359375 C29.296875,45.5167373 31.0457627,47.265625 33.203125,47.265625 L46.2890625,47.265625 L46.2890625,55.0792969 L35.2174276,69.250252 C33.8892228,70.9502767 34.1906423,73.4051418 35.890667,74.7333467 C37.5906917,76.0615515 40.0455568,75.760132 41.3737617,74.0601073 L50.1,62.890625 L50.234375,62.890625 L58.9608158,74.0601073 C60.2890207,75.760132 62.7438858,76.0615515 64.4439105,74.7333467 C66.1439352,73.4051418 66.4453547,70.9502767 65.1171498,69.250252 L54.1015625,55.1511719 L54.1015625,47.265625 L66.796875,47.265625 C68.9542373,47.265625 70.703125,45.5167373 70.703125,43.359375 C70.703125,41.2020127 68.9542373,39.453125 66.796875,39.453125 Z M50.0976562,23.828125 C46.8076787,23.828125 44.140625,26.4951787 44.140625,29.7851562 C44.140625,33.0751338 46.8076787,35.7421875 50.0976562,35.7421875 C53.3876338,35.7421875 56.0546875,33.0751338 56.0546875,29.7851562 C56.0546875,26.4951787 53.3876338,23.828125 50.0976562,23.828125 Z"></path>
+        </svg>
+    </a>
+        <nav aria-label="primary navigation">
+            <ul class="cluster" role="list">
+                <li><a href="#" target="_blank">Guidance</a></li>
+                <li><a href="#" target="_blank">Support</a></li>
+                <li><a href="#" target="_blank">Feedback</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<template>
+    <li data-impact="{{impact}}" data-hash="{{permalinkId}}">
+        <article class="summary border">
+            <header class="repel border-bottom region wrapper">
+                <h2>
+                    <a id="helpUrl" class="id" href="{{helpUrl}}" target="_blank">{{violationId}}</a>
+                </h2>
+                <ul class="cluster" role="list">
+                    <li><span id="impactTag" class="impact tag" data-tag="{{impact}}">{{impact}}</span></li>
+                    <li><span id="testEngineVersion" class="version tag" data-tag="version">{{testEngine.version}}</span></li>
+                </ul>
+            </header>
+            <div class="wrapper">
+
+                <dl>
+                    <div class="border-bottom region">
+                        <dt>Help</dt>
+                        <dd id="violationHelp" class="help">{{help}}</dd>
+                    </div>
+                    <div class="border-bottom region">
+                        <dt>HTML</dt>
+                        <dd>
+                            <pre id="htmlSnippet" class="html">{{htmlSnippet}}</pre>
+                        </dd>
+                    </div>
+                    <div class="border-bottom region">
+                        <dt>Affects</dt>
+                        <dd>
+                            <details>
+                                <summary id="urlViolationSummary">{{urlsCount}}}</summary>
+                                <ul id="urlViolations" class="affects"></ul>
+                            </details>
+                        </dd>
+                    </div>
+                    <div class="region">
+                        <dt>Permalink</dt>
+                        <dd>
+                            <a id="violationPermaLink" class="permalink" href="{{url}}?search={{permalinkId}}">{{url}}?search={{permalinkId}}</a>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </article>
+    </li>
+</template>
+
+<main id="issues" class="sidebar region wrapper">
+    <aside id="sidebar" class="js-hidden">
+        <form id="form" class="flow">
+            <label for="keywords">Search</label>
+            <input id="search" class="search" type="text" name="search">
+            <fieldset class="flow">
+                <legend>Impact</legend>
+                <ul class="flow" role="list" aria-live="assertive">
+                    <li class="cluster"><input id="impact-critical" type="checkbox" name="impact" value="critical">
+                        <label for="impact-critical">Critical</label></li>
+                    <li class="cluster"><input id="impact-serious" type="checkbox" name="impact" value="serious"> <label
+                            for="impact-serious">Serious</label></li>
+                    <li class="cluster"><input id="impact-moderate" type="checkbox" name="impact" value="moderate">
+                        <label for="impact-moderate">Moderate</label></li>
+                    <li class="cluster"><input id="impact-info" type="checkbox" name="impact" value="info"> <label
+                            for="impact-info">Info</label></li>
+                </ul>
+            </fieldset>
+            <button id="clear">Clear</button>
+        </form>
+    </aside>
+    <article class="flow"><h1>Accessibility assessment</h1>
+        <p aria-live="assertive" id="issueCount">Displaying all issues identified.</p>
+        <ul id="violations" class="flow list" role="list"></ul>
+    </article>
+</main>
+
+<!-- TODO: Templatise this too-->
+<footer class="border-top repel region wrapper" role="contentinfo"><p>&copy; 2023 <a href="#">{{service-name-ui-journey-tests}}</a>
+</p>
+    <nav aria-label="secondary navigation">
+        <ul class="cluster" role="list">
+            <li><a href="#">Back to top</a></li>
+        </ul>
+    </nav>
+</footer>
+</body>
+</html>

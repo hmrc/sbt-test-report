@@ -39,70 +39,103 @@ async function init() {
 
     const violationList = document.getElementById('violations');
     const createViolations = () => {
-        Array.from(axeAssessedPages).forEach(page => {
-            const testEngineVersion = page.testEngine.version;
-            Array.from(page.violations).forEach(violation => {
-                const violationData = {
-                    id: violation.id,
-                    impact: violation.impact,
-                    version: testEngineVersion,
-                    help: violation.help,
-                    html: Array.from(violation.nodes).map(node => node.html),
-                    affects: page.url,
-                }
-                const dataHash = MD5.generate(JSON.stringify(violationData));
-                const windowHref = window.location.href;
-                const permaLink = windowHref.includes('?search=') ? windowHref : windowHref + '?search=' + dataHash;
-                violationData.dataHash = dataHash;
-                violationData.permaLink = permaLink;
-                issues.push(violationData);
+        const createViolationData = () => {
+            Array.from(axeAssessedPages).forEach(page => {
+                const testEngineVersion = page.testEngine.version;
+                Array.from(page.violations).forEach(violation => {
+                    const violationData = {
+                        id: violation.id,
+                        impact: violation.impact,
+                        version: testEngineVersion,
+                        help: violation.help,
+                        helpUrl: violation.helpUrl,
+                        html: Array.from(violation.nodes).map(node => node.html),
+                        affects: page.url,
+                        testEngineVersion
+                    }
+                    const dataHash = MD5.generate(JSON.stringify(violationData));
+                    const windowHref = window.location.href;
+                    const permaLink = windowHref.includes('?search=') ? windowHref : windowHref + '?search=' + dataHash;
+                    violationData.dataHash = dataHash;
+                    violationData.permaLink = permaLink;
+                    issues.push(violationData);
+                });
+            });
+        };
 
+        const createAndPopulateViolationElements = () => {
+            issues.forEach(issue => {
                 let temp = document.getElementsByTagName("template")[0];
                 let clonedTemplate = temp.content.cloneNode(true);
                 const li = clonedTemplate.querySelector('li');
 
-                li.setAttribute('data-hash', dataHash);
-                li.setAttribute('data-impact', violationData.impact);
+                li.setAttribute('data-hash', issue.dataHash);
+                li.setAttribute('data-impact', issue.impact);
 
                 const helpUrl = clonedTemplate.getElementById('helpUrl');
-                helpUrl.setAttribute('href', violation.helpUrl);
-                helpUrl.innerText = violationData.id;
+                helpUrl.setAttribute('href', issue.helpUrl);
+                helpUrl.innerText = issue.id;
 
                 const impactTag = clonedTemplate.getElementById('impactTag');
-                impactTag.setAttribute('data-tag', violationData.impact);
-                impactTag.innerText = violationData.impact;
+                impactTag.setAttribute('data-tag', issue.impact);
+                impactTag.innerText = issue.impact;
 
                 const testEngine = clonedTemplate.getElementById('testEngineVersion');
-                testEngine.innerText = testEngineVersion;
+                testEngine.innerText = issue.testEngineVersion;
 
                 const violationHelp = clonedTemplate.getElementById('violationHelp');
-                violationHelp.innerText = violationData.help;
+                violationHelp.innerText = issue.help;
 
                 const htmlSnippet = clonedTemplate.getElementById('htmlSnippet');
-                htmlSnippet.innerText = violationData.html;
+                htmlSnippet.innerText = issue.html;
 
                 const urlViolationSummary = clonedTemplate.getElementById('urlViolationSummary');
                 urlViolationSummary.innerText = '1 URLs';
                 const urlViolations = clonedTemplate.getElementById('urlViolations');
                 const urlListItem = document.createElement('li');
                 const urlHref = document.createElement('a');
-                urlHref.innerText = violationData.affects;
+                urlHref.innerText = issue.affects;
                 urlListItem.appendChild(urlHref);
                 urlViolations.append(urlListItem);
 
                 const violationPermaLink = clonedTemplate.getElementById('violationPermaLink');
-                violationPermaLink.setAttribute('href', permaLink);
-                violationPermaLink.innerText = permaLink;
+                violationPermaLink.setAttribute('href', issue.permaLink);
+                violationPermaLink.innerText = issue.permaLink;
 
                 violationList.appendChild(clonedTemplate);
             });
-        });
+        }
+
+        const sortByImpact = (array) => {
+            const severityMap = {
+                "critical": 0,
+                "serious": 1,
+                "moderate": 2,
+                "info": 3,
+            };
+
+            array.sort((a, b) => {
+                const aSeverity = severityMap[a.impact];
+                const bSeverity = severityMap[b.impact];
+
+                if (aSeverity !== bSeverity) {
+                    return aSeverity - bSeverity;
+                }
+
+                return a.impact - b.impact;
+            });
+
+            return array;
+        }
+
+        createViolationData();
+        sortByImpact(issues);
+        createAndPopulateViolationElements();
     }
     createViolations();
 
     const issueCount = document.getElementById('issueCount');
-
-    function displayIssueCount() {
+    const displayIssueCount = () => {
         const displayedViolations = document.querySelectorAll(`li[data-hash]`);
 
         const count = Array.from(displayedViolations)
@@ -230,7 +263,7 @@ async function init() {
     });
 
     // Filters
-    function applyFilters() {
+    const applyFilters = () => {
         const activeFilters = Array.from(filters).reduce((active, filter) => {
             return active.concat(filter.checked ? filter.value : []);
         }, []);

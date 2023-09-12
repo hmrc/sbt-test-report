@@ -64,12 +64,12 @@ async function init() {
 
                     const existingIssue = issues.find(issue =>  {
                         return issue.id === violationData.id &&
-                            issue.html.join(' ') === violationData.html.join(' ') &&
-                            issue.impact === violationData.impact;
+                            issue.html.join(' ') === violationData.html.join(' ');
                     });
 
                     if (existingIssue) {
-                        existingIssue.affects.push(page.url);
+                        if(!existingIssue.affects.includes(page.url))
+                            existingIssue.affects.push(page.url);
                     } else {
                         issues.push(violationData);
                     }

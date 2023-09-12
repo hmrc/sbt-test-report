@@ -257,9 +257,16 @@ object TestReportPlugin extends AutoPlugin {
         }
         .mkString(",")
 
-      val reportJs = os.read(os.resource(getClass.getClassLoader) / "assets" / "report.js")
-      val updatedReportJs = reportJs.replaceAllLiterally("'%INJECT_AXE_VIOLATIONS%'", axeResults)
-      os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "report.js"), updatedReportJs)
+      // TODO: Set reportMetaData
+      val projectMetaData    = ujson.read(os.read(os.resource(getClass.getClassLoader) / "reportMetaData.json"))
+      val updatedProjectMetaData = projectMetaData
+
+      val reportMetaDataJson = ujson.write(updatedProjectMetaData)
+      val reportDataJs       = os.read(os.resource(getClass.getClassLoader) / "assets" / "data.js")
+      val updatedReportJs    = reportDataJs
+        .replaceAllLiterally("'%INJECT_AXE_VIOLATIONS%'", axeResults)
+        .replaceAllLiterally("'%INJECT_REPORT_METADATA%'", reportMetaDataJson)
+      os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)
 
       // Write the updated HTML to the output file
       os.write.over(

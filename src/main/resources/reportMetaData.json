@@ -1,0 +1,7 @@
+{
+  "projectName": "platform-example-ui-tests",
+  "browser": "Chrome",
+  "jenkinsBuildId": "#42",
+  "jenkinsBuildUrl": "https://build.tax.service.gov.uk/job/Platform-Testing/job/Examples/job/platform-example-ui-tests/42/",
+  "dateOfAssessment": "09-11-2023"
+}

@@ -101,13 +101,12 @@
         </form>
     </aside>
     <article class="flow"><h1>Accessibility assessment</h1>
-        <p aria-live="assertive" id="issueCount">Displaying all issues identified.</p>
+        <p aria-live="assertive" id="issueCount"></p>
         <ul id="violations" class="flow list" role="list"></ul>
     </article>
 </main>
 
-<!-- TODO: Templatise this too-->
-<footer class="border-top repel region wrapper" role="contentinfo"><p>&copy; 2023 <a href="#">{{service-name-ui-journey-tests}}</a>
+<footer class="border-top repel region wrapper" role="contentinfo"><p>&copy; 2023 <span id="footerProjectLink"></span>
 </p>
     <nav aria-label="secondary navigation">
         <ul class="cluster" role="list">

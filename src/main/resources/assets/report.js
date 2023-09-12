@@ -6,18 +6,18 @@ async function init() {
     // Init
     let initialSearchParams = new URLSearchParams(window.location.search);
 
-    if(reportMetaData) {
+    if (reportMetaData) {
         const reportMetaDataElement = document.getElementById('headerMetaData');
         const spanBuildNumber = document.createElement('span');
         const paragraph = document.createElement('p');
-        if(reportMetaData.jenkinsBuildId) {
+        if (reportMetaData.jenkinsBuildId) {
             paragraph.innerHTML = "Generated from build ";
             const arefBuildUrl = document.createElement('a');
             arefBuildUrl.href = reportMetaData.jenkinsBuildUrl;
             arefBuildUrl.innerText = reportMetaData.jenkinsBuildId;
             spanBuildNumber.appendChild(arefBuildUrl);
             paragraph.appendChild(spanBuildNumber);
-            paragraph.innerHTML +=  ' (' + reportMetaData.browser + ')' + ' of '
+            paragraph.innerHTML += ' (' + reportMetaData.browser + ')' + ' of '
         } else {
             paragraph.innerHTML = "Generated from";
         }
@@ -48,14 +48,14 @@ async function init() {
                     version: testEngineVersion,
                     help: violation.help,
                     html: Array.from(violation.nodes).map(node => node.html),
-                    affects: page.url
+                    affects: page.url,
                 }
                 const dataHash = MD5.generate(JSON.stringify(violationData));
                 const windowHref = window.location.href;
-                const permaLink = windowHref.indexOf('?search=') === -1 ?
-                    windowHref + '?search=' + dataHash :
-                    windowHref;
-                console.log(permaLink);
+                console.log('windowHref', windowHref);
+                console.log('windowHref.includes(\'?search=\')', windowHref.includes('?search='));
+                const permaLink = windowHref.includes('?search=') ? windowHref : windowHref + '?search=' + dataHash;
+                console.log('permaLink', permaLink);
                 violationData.dataHash = dataHash;
                 violationData.permaLink = permaLink;
                 issues.push(violationData);
@@ -94,7 +94,6 @@ async function init() {
                 urlViolations.append(urlListItem);
 
                 const violationPermaLink = clonedTemplate.getElementById('violationPermaLink');
-                console.log('permaLink',permaLink);
                 violationPermaLink.setAttribute('href', permaLink);
                 violationPermaLink.innerText = permaLink;
 
@@ -105,18 +104,15 @@ async function init() {
     createViolations();
 
     const issueCount = document.getElementById('issueCount');
+
     function displayIssueCount() {
         const displayedViolations = document.querySelectorAll(`li[data-hash]`);
 
-        const count = Array.from(displayedViolations).map(liViolation => {
-            if(liViolation.style.display === 'none') {
-                return 0;
-            } else {
-                return 1;
-            }
-        }).reduce((accumulator, currentValue) => {
-            return accumulator + currentValue
-        },0);
+        const count = Array.from(displayedViolations)
+            .map(liViolation => liViolation.style.display === 'none' ? 0 : 1)
+            .reduce((accumulator, currentValue) => {
+                return accumulator + currentValue
+            }, 0);
 
         if (count === 0) {
             issueCount.innerText = "No issues identified.";
@@ -127,22 +123,23 @@ async function init() {
 
     // Form
     const form = document.getElementById("form");
+    form.addEventListener('keypress', function (e) {
+        if (e.code === 'Enter') {
+            e.preventDefault();
+        }
+    });
     form.addEventListener("submit", function (event) {
         event.preventDefault();
     });
 
-    function updateUrl() {
-        const url = new URL(window.location);
-        const clearUrlParams = url.href.replace(url.search, '');
-
-        history.pushState({}, "", clearUrlParams);
-        window.location.href = clearUrlParams;
-    }
-
     const searchViolations = (value) => {
         const violationsNotMatchingSearch = issues.filter(issue => {
-            if(issue.id.indexOf(value) === -1 && issue.impact.indexOf(value) === -1 && issue.version.indexOf(value) === -1 &&
-                issue.help.indexOf(value) === -1 && issue.html.indexOf(value) === -1 && issue.affects.indexOf(value) === -1 &&
+            if (issue.id.indexOf(value) === -1 &&
+                issue.impact.indexOf(value) === -1 &&
+                issue.version.indexOf(value) === -1 &&
+                issue.help.indexOf(value) === -1 &&
+                issue.html.indexOf(value) === -1 &&
+                issue.affects.indexOf(value) === -1 &&
                 issue.dataHash.indexOf(value) === -1) {
                 return issue;
             }
@@ -150,15 +147,42 @@ async function init() {
 
         violationsNotMatchingSearch.forEach(violation => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
-            if(dataHashFound) {
+            if (dataHashFound) {
                 for (let i = 0; i < dataHashFound.length; ++i) {
                     dataHashFound[i].style.display = 'none';
                 }
-                displayIssueCount();
             }
         });
+
+        displayIssueCount();
     }
 
+    const filterByViolationImpact = (violations) => {
+        issues.forEach(issue => {
+            const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
+            if (dataHashFound) {
+                for (let i = 0; i < dataHashFound.length; ++i) {
+                    if (violations && violations.length > 0) {
+                        dataHashFound[i].style.display = 'none';
+                    } else {
+                        dataHashFound[i].style.display = 'block';
+                    }
+                }
+            }
+        });
+
+        violations.forEach(violation => {
+            const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
+            if (dataHashFound) {
+                for (let i = 0; i < dataHashFound.length; ++i) {
+                    dataHashFound[i].style.display = 'block';
+                }
+            }
+        });
+        displayIssueCount();
+    }
+
+    // URL query parameters
     initialSearchParams.forEach((valueFromUrl, name) => {
         const fields = document.querySelectorAll(`[name='${name}']`);
 
@@ -174,24 +198,23 @@ async function init() {
 
         if (name === "search") {
             const foundIssue = issues.find(issue => issue.dataHash === valueFromUrl);
-            console.log('foundIssue',foundIssue);
-            if(foundIssue) {
+            console.log('foundIssue', foundIssue);
+            if (foundIssue) {
                 searchViolations(foundIssue.dataHash);
             }
         }
     });
 
-    displayIssueCount();
-
     const clearSearch = () => {
-        const dataHashFound = document.querySelectorAll(`li[data-hash]`);
-        if(dataHashFound) {
-            for (let i = 0; i < dataHashFound.length; ++i) {
-                dataHashFound[i].style.display = 'block';
-            }
-            updateUrl();
-            displayIssueCount();
+        const url = new URL(window.location);
+        let clearUrlParams = url.href;
+        if (url.search !== "") {
+            clearUrlParams = url.href.replace(url.search, '');
         }
+        console.log('clear url params:' + clearUrlParams);
+
+        history.pushState({}, "", clearUrlParams);
+        window.location.href = clearUrlParams;
     }
 
     // Visibility (based on JavaScript enabled/disabled in browser)
@@ -199,24 +222,18 @@ async function init() {
 
     // Search
     const search = document.getElementById("search");
+    search.addEventListener("keyup", (e) => {
+        applyFilters();
+        searchViolations(e.target.value);
+    });
 
     // Clear
     const clear = document.getElementById("clear");
-
     clear.addEventListener("click", () => {
         search.value = "";
         filters.forEach((filter) => (filter.checked = false));
         clearSearch();
     });
-
-    // Dynamic updates
-    // issues.on("updated", function () {
-    //     displayIssueCount();
-    //     updateUrl();
-    // });
-
-    // URL query parameters
-
 
     // Filters
     function applyFilters() {
@@ -224,21 +241,21 @@ async function init() {
             return active.concat(filter.checked ? filter.value : []);
         }, []);
 
+        let violationByImpact = [];
         if (activeFilters.length) {
-            return issues.filter((issue) => {
+            violationByImpact = issues.filter((issue) => {
                 return activeFilters.includes(issue.impact);
             });
         }
+
+        filterByViolationImpact(violationByImpact);
     }
 
+    // Impact toggles
     const filters = document.querySelectorAll("input[name='impact']");
     filters.forEach((filter) => {
         filter.addEventListener("input", applyFilters);
     });
 
-    // Remove "?search=" from start URL when search not applied
-    console.log('window.location.search',window.location.search);
-    if (window.location.search !== "") {
-        applyFilters();
-    }
+    displayIssueCount();
 }

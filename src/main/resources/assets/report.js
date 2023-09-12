@@ -52,10 +52,7 @@ async function init() {
                 }
                 const dataHash = MD5.generate(JSON.stringify(violationData));
                 const windowHref = window.location.href;
-                console.log('windowHref', windowHref);
-                console.log('windowHref.includes(\'?search=\')', windowHref.includes('?search='));
                 const permaLink = windowHref.includes('?search=') ? windowHref : windowHref + '?search=' + dataHash;
-                console.log('permaLink', permaLink);
                 violationData.dataHash = dataHash;
                 violationData.permaLink = permaLink;
                 issues.push(violationData);
@@ -198,7 +195,6 @@ async function init() {
 
         if (name === "search") {
             const foundIssue = issues.find(issue => issue.dataHash === valueFromUrl);
-            console.log('foundIssue', foundIssue);
             if (foundIssue) {
                 searchViolations(foundIssue.dataHash);
             }
@@ -211,8 +207,6 @@ async function init() {
         if (url.search !== "") {
             clearUrlParams = url.href.replace(url.search, '');
         }
-        console.log('clear url params:' + clearUrlParams);
-
         history.pushState({}, "", clearUrlParams);
         window.location.href = clearUrlParams;
     }
@@ -249,6 +243,10 @@ async function init() {
         }
 
         filterByViolationImpact(violationByImpact);
+        const searchValue = document.getElementById('search');
+        if(searchValue) {
+            searchViolations(searchValue.value);
+        }
     }
 
     // Impact toggles

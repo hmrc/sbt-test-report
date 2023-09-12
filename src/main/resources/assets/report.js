@@ -1,22 +1,10 @@
 async function init() {
-    const issues = new List("issues", {
-        valueNames: [
-            "id",
-            "impact",
-            "version",
-            "help",
-            "html",
-            "affects",
-            "permalink",
-            {
-                data: ["hash"],
-            },
-        ]
-    })
-
-    document.issues = issues;
+    const issues = [];
 
     const {reportMetaData, axeAssessedPages} = reportData();
+
+    // Init
+    let initialSearchParams = new URLSearchParams(window.location.search);
 
     if(reportMetaData) {
         const reportMetaDataElement = document.getElementById('headerMetaData');
@@ -50,51 +38,92 @@ async function init() {
     }
 
     const violationList = document.getElementById('violations');
-    Array.from(axeAssessedPages).forEach(page => {
-        const testEngineVersion = page.testEngine.version;
-        Array.from(page.violations).forEach(violation => {
-            let temp = document.getElementsByTagName("template")[0];
-            let clonedTemplate = temp.content.cloneNode(true);
-            const li = clonedTemplate.querySelector('li');
-            const dataHash = crypto.randomUUID();
-            li.setAttribute('data-hash', dataHash);
-            li.setAttribute('data-impact', violation.impact);
-            const helpUrl = clonedTemplate.getElementById('helpUrl');
-            helpUrl.setAttribute('href', violation.helpUrl);
-            helpUrl.innerText = violation.id;
-            const impactTag = clonedTemplate.getElementById('impactTag');
-            impactTag.setAttribute('data-tag', violation.impact);
-            impactTag.innerText = violation.impact;
-            //testEngineVersion
-            const testEngine = clonedTemplate.getElementById('testEngineVersion');
-            testEngine.innerText = testEngineVersion;
-            //violationHelp
-            const violationHelp = clonedTemplate.getElementById('violationHelp');
-            violationHelp.innerText = violation.help;
-            // htmlSnippet
-            const htmlSnippet = clonedTemplate.getElementById('htmlSnippet');
-            htmlSnippet.innerText = Array.from(violation.nodes).map(node => node.html);
-            // urlViolations
-            const urlViolation = page.url;
-            const urlViolationSummary = clonedTemplate.getElementById('urlViolationSummary');
-            urlViolationSummary.innerText = '1 URLs';
-            const urlViolations = clonedTemplate.getElementById('urlViolations');
-            const urlListItem = document.createElement('li');
-            const urlHref = document.createElement('a');
-            urlHref.innerText = urlViolation;
-            urlListItem.appendChild(urlHref);
-            urlViolations.append(urlListItem);
-            const violationPermaLink = clonedTemplate.getElementById('violationPermaLink');
-            const permaLink = window.location.href + '?search=' + dataHash;
-            violationPermaLink.setAttribute('href', permaLink);
-            violationPermaLink.innerText = permaLink;
+    const createViolations = () => {
+        Array.from(axeAssessedPages).forEach(page => {
+            const testEngineVersion = page.testEngine.version;
+            Array.from(page.violations).forEach(violation => {
+                const violationData = {
+                    id: violation.id,
+                    impact: violation.impact,
+                    version: testEngineVersion,
+                    help: violation.help,
+                    html: Array.from(violation.nodes).map(node => node.html),
+                    affects: page.url
+                }
+                const dataHash = MD5.generate(JSON.stringify(violationData));
+                const windowHref = window.location.href;
+                const permaLink = windowHref.indexOf('?search=') === -1 ?
+                    windowHref + '?search=' + dataHash :
+                    windowHref;
+                console.log(permaLink);
+                violationData.dataHash = dataHash;
+                violationData.permaLink = permaLink;
+                issues.push(violationData);
 
-            violationList.appendChild(clonedTemplate);
+                let temp = document.getElementsByTagName("template")[0];
+                let clonedTemplate = temp.content.cloneNode(true);
+                const li = clonedTemplate.querySelector('li');
+
+                li.setAttribute('data-hash', dataHash);
+                li.setAttribute('data-impact', violationData.impact);
+
+                const helpUrl = clonedTemplate.getElementById('helpUrl');
+                helpUrl.setAttribute('href', violation.helpUrl);
+                helpUrl.innerText = violationData.id;
+
+                const impactTag = clonedTemplate.getElementById('impactTag');
+                impactTag.setAttribute('data-tag', violationData.impact);
+                impactTag.innerText = violationData.impact;
+
+                const testEngine = clonedTemplate.getElementById('testEngineVersion');
+                testEngine.innerText = testEngineVersion;
+
+                const violationHelp = clonedTemplate.getElementById('violationHelp');
+                violationHelp.innerText = violationData.help;
+
+                const htmlSnippet = clonedTemplate.getElementById('htmlSnippet');
+                htmlSnippet.innerText = violationData.html;
+
+                const urlViolationSummary = clonedTemplate.getElementById('urlViolationSummary');
+                urlViolationSummary.innerText = '1 URLs';
+                const urlViolations = clonedTemplate.getElementById('urlViolations');
+                const urlListItem = document.createElement('li');
+                const urlHref = document.createElement('a');
+                urlHref.innerText = violationData.affects;
+                urlListItem.appendChild(urlHref);
+                urlViolations.append(urlListItem);
+
+                const violationPermaLink = clonedTemplate.getElementById('violationPermaLink');
+                console.log('permaLink',permaLink);
+                violationPermaLink.setAttribute('href', permaLink);
+                violationPermaLink.innerText = permaLink;
+
+                violationList.appendChild(clonedTemplate);
+            });
         });
-    });
+    }
+    createViolations();
 
-    // Visibility (based on JavaScript enabled/disabled in browser)
-    document.getElementById("sidebar").classList.remove("js-hidden");
+    const issueCount = document.getElementById('issueCount');
+    function displayIssueCount() {
+        const displayedViolations = document.querySelectorAll(`li[data-hash]`);
+
+        const count = Array.from(displayedViolations).map(liViolation => {
+            if(liViolation.style.display === 'none') {
+                return 0;
+            } else {
+                return 1;
+            }
+        }).reduce((accumulator, currentValue) => {
+            return accumulator + currentValue
+        },0);
+
+        if (count === 0) {
+            issueCount.innerText = "No issues identified.";
+        } else {
+            issueCount.innerText = `Displaying ${count} of ${issues.length} issues identified.`;
+        }
+    }
 
     // Form
     const form = document.getElementById("form");
@@ -102,28 +131,33 @@ async function init() {
         event.preventDefault();
     });
 
-    // Clear
-    const clear = document.getElementById("clear");
+    function updateUrl() {
+        const url = new URL(window.location);
+        const clearUrlParams = url.href.replace(url.search, '');
 
-    clear.addEventListener("click", () => {
-        search.value = "";
-        filters.forEach((filter) => (filter.checked = false));
+        history.pushState({}, "", clearUrlParams);
+        window.location.href = clearUrlParams;
+    }
 
-        issues.search();
-        issues.filter();
-    });
+    const searchViolations = (value) => {
+        const violationsNotMatchingSearch = issues.filter(issue => {
+            if(issue.id.indexOf(value) === -1 && issue.impact.indexOf(value) === -1 && issue.version.indexOf(value) === -1 &&
+                issue.help.indexOf(value) === -1 && issue.html.indexOf(value) === -1 && issue.affects.indexOf(value) === -1 &&
+                issue.dataHash.indexOf(value) === -1) {
+                return issue;
+            }
+        });
 
-    // Dynamic updates
-    issues.on("updated", function () {
-        displayIssueCount();
-        updateUrl();
-    });
-
-    // Search
-    const search = document.getElementById("search");
-
-    // Init
-    let initialSearchParams = new URLSearchParams(window.location.search);
+        violationsNotMatchingSearch.forEach(violation => {
+            const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
+            if(dataHashFound) {
+                for (let i = 0; i < dataHashFound.length; ++i) {
+                    dataHashFound[i].style.display = 'none';
+                }
+                displayIssueCount();
+            }
+        });
+    }
 
     initialSearchParams.forEach((valueFromUrl, name) => {
         const fields = document.querySelectorAll(`[name='${name}']`);
@@ -139,51 +173,71 @@ async function init() {
         }
 
         if (name === "search") {
-            issues.search(valueFromUrl);
+            const foundIssue = issues.find(issue => issue.dataHash === valueFromUrl);
+            console.log('foundIssue',foundIssue);
+            if(foundIssue) {
+                searchViolations(foundIssue.dataHash);
+            }
         }
     });
 
-    // URL query parameters
-    function updateUrl() {
-        const url = new URL(window.location);
-        url.search = new URLSearchParams(new FormData(form));
-        window.history.pushState({}, "", url);
-    }
+    displayIssueCount();
 
-    const issueCount = document.getElementById('issueCount');
-
-    function displayIssueCount() {
-        if (issues.items.length === 0) {
-            issueCount.innerText = "No issues identified.";
-        } else {
-            issueCount.innerText = `Displaying ${issues.visibleItems.length} of ${issues.items.length} issues identified.`;
+    const clearSearch = () => {
+        const dataHashFound = document.querySelectorAll(`li[data-hash]`);
+        if(dataHashFound) {
+            for (let i = 0; i < dataHashFound.length; ++i) {
+                dataHashFound[i].style.display = 'block';
+            }
+            updateUrl();
+            displayIssueCount();
         }
     }
 
+    // Visibility (based on JavaScript enabled/disabled in browser)
+    document.getElementById("sidebar").classList.remove("js-hidden");
+
+    // Search
+    const search = document.getElementById("search");
+
+    // Clear
+    const clear = document.getElementById("clear");
+
+    clear.addEventListener("click", () => {
+        search.value = "";
+        filters.forEach((filter) => (filter.checked = false));
+        clearSearch();
+    });
+
+    // Dynamic updates
+    // issues.on("updated", function () {
+    //     displayIssueCount();
+    //     updateUrl();
+    // });
+
+    // URL query parameters
+
+
+    // Filters
     function applyFilters() {
         const activeFilters = Array.from(filters).reduce((active, filter) => {
             return active.concat(filter.checked ? filter.value : []);
         }, []);
 
         if (activeFilters.length) {
-            issues.filter((issue) => {
-                return activeFilters.includes(issue.values().impact);
+            return issues.filter((issue) => {
+                return activeFilters.includes(issue.impact);
             });
-        } else {
-            issues.filter();
         }
     }
 
-    displayIssueCount();
-
-    // Filters
     const filters = document.querySelectorAll("input[name='impact']");
-
     filters.forEach((filter) => {
         filter.addEventListener("input", applyFilters);
     });
 
     // Remove "?search=" from start URL when search not applied
+    console.log('window.location.search',window.location.search);
     if (window.location.search !== "") {
         applyFilters();
     }

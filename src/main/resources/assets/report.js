@@ -6,6 +6,7 @@ async function init() {
     // Init
     let initialSearchParams = new URLSearchParams(window.location.search);
 
+    // Create page header with report metadata
     if (reportMetaData) {
         const reportMetaDataElement = document.getElementById('headerMetaData');
         const spanBuildNumber = document.createElement('span');
@@ -37,6 +38,7 @@ async function init() {
         footerProjectLinkElement.append(arefProjectName);
     }
 
+    // Create and populate violations
     const violationList = document.getElementById('violations');
     const createViolations = () => {
         const createViolationData = () => {
@@ -50,15 +52,27 @@ async function init() {
                         help: violation.help,
                         helpUrl: violation.helpUrl,
                         html: Array.from(violation.nodes).map(node => node.html),
-                        affects: page.url,
+                        affects: [page.url],
                         testEngineVersion
-                    }
+                    };
+
                     const dataHash = MD5.generate(JSON.stringify(violationData));
                     const windowHref = window.location.href;
                     const permaLink = windowHref.includes('?search=') ? windowHref : windowHref + '?search=' + dataHash;
                     violationData.dataHash = dataHash;
                     violationData.permaLink = permaLink;
-                    issues.push(violationData);
+
+                    const existingIssue = issues.find(issue =>  {
+                        return issue.id === violationData.id &&
+                            issue.html.join(' ') === violationData.html.join(' ') &&
+                            issue.impact === violationData.impact;
+                    });
+
+                    if (existingIssue) {
+                        existingIssue.affects.push(page.url);
+                    } else {
+                        issues.push(violationData);
+                    }
                 });
             });
         };
@@ -90,13 +104,16 @@ async function init() {
                 htmlSnippet.innerText = issue.html;
 
                 const urlViolationSummary = clonedTemplate.getElementById('urlViolationSummary');
-                urlViolationSummary.innerText = '1 URLs';
+                const affectsUrls = issue.affects;
+                urlViolationSummary.innerText = `${affectsUrls.length} URLs`;
                 const urlViolations = clonedTemplate.getElementById('urlViolations');
-                const urlListItem = document.createElement('li');
-                const urlHref = document.createElement('a');
-                urlHref.innerText = issue.affects;
-                urlListItem.appendChild(urlHref);
-                urlViolations.append(urlListItem);
+                affectsUrls.forEach(url => {
+                    const urlListItem = document.createElement('li');
+                    const urlHref = document.createElement('a');
+                    urlHref.innerText = url;
+                    urlListItem.appendChild(urlHref);
+                    urlViolations.append(urlListItem);
+                });
 
                 const violationPermaLink = clonedTemplate.getElementById('violationPermaLink');
                 violationPermaLink.setAttribute('href', issue.permaLink);
@@ -134,6 +151,7 @@ async function init() {
     }
     createViolations();
 
+    // Issue count
     const issueCount = document.getElementById('issueCount');
     const displayIssueCount = () => {
         const displayedViolations = document.querySelectorAll(`li[data-hash]`);
@@ -162,6 +180,7 @@ async function init() {
         event.preventDefault();
     });
 
+    // Search
     const searchViolations = (value) => {
         const violationsNotMatchingSearch = issues.filter(issue => {
             if (issue.id.indexOf(value) === -1 &&
@@ -169,7 +188,7 @@ async function init() {
                 issue.version.indexOf(value) === -1 &&
                 issue.help.indexOf(value) === -1 &&
                 issue.html.indexOf(value) === -1 &&
-                issue.affects.indexOf(value) === -1 &&
+                issue.affects.join(' ').indexOf(value) === -1 &&
                 issue.dataHash.indexOf(value) === -1) {
                 return issue;
             }
@@ -244,17 +263,12 @@ async function init() {
         window.location.href = clearUrlParams;
     }
 
-    // Visibility (based on JavaScript enabled/disabled in browser)
-    document.getElementById("sidebar").classList.remove("js-hidden");
-
-    // Search
     const search = document.getElementById("search");
     search.addEventListener("keyup", (e) => {
         applyFilters();
         searchViolations(e.target.value);
     });
 
-    // Clear
     const clear = document.getElementById("clear");
     clear.addEventListener("click", () => {
         search.value = "";
@@ -289,4 +303,7 @@ async function init() {
     });
 
     displayIssueCount();
+
+    // Visibility (based on JavaScript enabled/disabled in browser)
+    document.getElementById("sidebar").classList.remove("js-hidden");
 }

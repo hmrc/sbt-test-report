@@ -188,4 +188,3 @@ async function init() {
         applyFilters();
     }
 }
-

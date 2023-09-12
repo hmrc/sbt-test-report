@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.testreport
 
-import sbt.{Def, *}
+import sbt.*
 
 object TestReportPlugin extends AutoPlugin {
 
@@ -236,7 +236,9 @@ object TestReportPlugin extends AutoPlugin {
 
       val assets = List(
         "list.min.js",
-        "style.css"
+        "style.css",
+        "report.js",
+        "data.js"
       )
 
       val htmlReport = "index.html"
@@ -253,7 +255,7 @@ object TestReportPlugin extends AutoPlugin {
         .filter(os.isDir)
         .map { timestampDirectory =>
           val ujsonValue = ujson.read(os.read(timestampDirectory / "axeResults.json"))
-          ujson.write(ujsonValue, indent = 4)
+          ujson.write(ujsonValue)
         }
         .mkString(",")
 
@@ -268,7 +270,6 @@ object TestReportPlugin extends AutoPlugin {
         .replaceAllLiterally("'%INJECT_REPORT_METADATA%'", reportMetaDataJson)
       os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)
 
-      // Write the updated HTML to the output file
       os.write.over(
         os.Path(reportDirectory.value / "html-report" / htmlReport),
         os.read(os.resource(getClass.getClassLoader) / htmlReport)

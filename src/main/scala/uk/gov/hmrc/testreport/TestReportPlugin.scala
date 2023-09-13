@@ -17,6 +17,8 @@
 package uk.gov.hmrc.testreport
 
 import sbt.*
+import _root_.io.circe.syntax.EncoderOps
+import uk.gov.hmrc.testreport.ReportMetaData.*
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -50,10 +52,10 @@ object TestReportPlugin extends AutoPlugin {
       os.makeDir.all(os.Path(reportDirectory.value / "html-report" / "assets"))
 
       val assets = List(
-        "list.min.js",
-        "style.css",
+        "data.js",
+        "md5.min.js",
         "report.js",
-        "data.js"
+        "style.css"
       )
 
       val htmlReport = "index.html"
@@ -69,29 +71,47 @@ object TestReportPlugin extends AutoPlugin {
         .stream(axeResultsDirectory)
         .filter(os.isDir)
         .map { timestampDirectory =>
-          val ujsonValue = ujson.read(os.read(timestampDirectory / "axeResults.json"))
+          val ujsonValue = ujson.read(os.read(timestampDirectory / "axe-report.json"))
           ujson.write(ujsonValue)
         }
         .mkString(",")
 
-      val jenkinsBuildId = sys.env.get("BUILD_ID")
+      val jenkinsBuildId  = sys.env.get("BUILD_ID")
       val jenkinsBuildUrl = sys.env.getOrElse("BUILD_URL", "#")
 
-      val format = new SimpleDateFormat("dd M yyyy")
-      val date = format.format(Calendar.getInstance().getTime())
-      val reportMetaData = ReportMetaData(
+      def getOrdinalSuffix(day: Int): String =
+        if (day % 10 == 1 && day != 11) {
+          "st"
+        } else if (day % 10 == 2 && day != 12) {
+          "nd"
+        } else if (day % 10 == 3 && day != 13) {
+          "rd"
+        } else {
+          "th"
+        }
+
+      def formatDate(date: Date): String = {
+        val dayFormat        = new SimpleDateFormat("d")
+        val restOfDateFormat = new SimpleDateFormat("MMMM yyyy 'at' hh:mma")
+
+        val day           = dayFormat.format(date).toInt
+        val ordinalSuffix = getOrdinalSuffix(day)
+
+        s"$day$ordinalSuffix ${restOfDateFormat.format(date)}"
+      }
+
+      val date               = formatDate(Calendar.getInstance().getTime)
+      val reportMetaData     = ReportMetaData(
         Keys.name.value,
         jenkinsBuildId,
         jenkinsBuildUrl,
         date
       )
+      val reportMetaDataJson = reportMetaData.asJson;
+      val jsonString         = reportMetaDataJson.noSpaces
 
-//      val projectMetaData        = ujson.read(os.read(os.resource(getClass.getClassLoader) / "reportMetaData.json"))
-//      val updatedProjectMetaData = projectMetaData
-//      val reportMetaDataJson = ujson.write(updatedProjectMetaData)
-
-      val reportDataJs       = os.read(os.resource(getClass.getClassLoader) / "assets" / "data.js")
-      val updatedReportJs    = reportDataJs
+      val reportDataJs    = os.read(os.resource(getClass.getClassLoader) / "assets" / "data.js")
+      val updatedReportJs = reportDataJs
         .replaceAllLiterally("'%INJECT_AXE_VIOLATIONS%'", axeResults)
         .replaceAllLiterally("'%INJECT_REPORT_METADATA%'", ReportMetaData.getJsonString(reportMetaData))
       os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)

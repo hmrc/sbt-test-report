@@ -7,7 +7,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Dependencies.compile,
     sbtPlugin := true,
     isPublicArtefact := true,
-    headerMappings := {
+    headerMappings := { // temp workaround for sbt-auto-build to not add copyright header to html files
       headerMappings.value.filterNot(_._1 == de.heikoseeberger.sbtheader.FileType("html"))
     }
   )

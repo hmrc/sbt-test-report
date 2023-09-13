@@ -181,27 +181,45 @@ async function init() {
     });
 
     // Search
+    const highlighter = new Mark(document.getElementById("violations"));
     const searchViolations = (value) => {
-        const violationsNotMatchingSearch = issues.filter(issue => {
-            if (issue.id.indexOf(value) === -1 &&
-                issue.impact.indexOf(value) === -1 &&
-                issue.version.indexOf(value) === -1 &&
-                issue.help.indexOf(value) === -1 &&
-                issue.html.indexOf(value) === -1 &&
-                issue.affects.join(' ').indexOf(value) === -1 &&
-                issue.dataHash.indexOf(value) === -1) {
-                return issue;
-            }
-        });
-
-        violationsNotMatchingSearch.forEach(violation => {
-            const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
-            if (dataHashFound) {
-                for (let i = 0; i < dataHashFound.length; ++i) {
-                    dataHashFound[i].style.display = 'none';
+        const showAllViolations = () => {
+            issues.forEach(issue => {
+                const dataHashFound = document.querySelector(`li[data-hash="${issue.dataHash}"]`);
+                if (dataHashFound) {
+                    dataHashFound.style.display = 'block';
                 }
-            }
-        });
+            });
+        }
+
+        const hideAllViolations = () => {
+            issues.forEach(issue => {
+                const dataHashFound = document.querySelector(`li[data-hash="${issue.dataHash}"]`);
+                if (dataHashFound) {
+                    dataHashFound.style.display = 'none';
+                }
+            });
+        }
+
+        if(value.trim() === "") {
+            showAllViolations()
+        } else {
+            hideAllViolations();
+            highlighter.mark(value, {
+                element: "span",
+                className: "highlight",
+                acrossElements: true,
+                each: (e) => {
+                    const dataHashFound = e.closest("li[data-hash]");
+                    if(dataHashFound) {
+                        dataHashFound.style.display = 'block';
+                    }
+                },
+                exclude: [
+                    "dt"
+                ]
+            });
+        }
 
         displayIssueCount();
     }

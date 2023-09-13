@@ -20,7 +20,7 @@ async function init() {
             paragraph.appendChild(spanBuildNumber);
             paragraph.innerHTML += ' (' + reportMetaData.browser + ')' + ' of '
         } else {
-            paragraph.innerHTML = "Generated from";
+            paragraph.innerHTML = "Generated from ";
         }
 
         const arefProjectName = document.createElement('a');
@@ -62,13 +62,13 @@ async function init() {
                     violationData.dataHash = dataHash;
                     violationData.permaLink = permaLink;
 
-                    const existingIssue = issues.find(issue =>  {
+                    const existingIssue = issues.find(issue => {
                         return issue.id === violationData.id &&
                             issue.html.join(' ') === violationData.html.join(' ');
                     });
 
                     if (existingIssue) {
-                        if(!existingIssue.affects.includes(page.url))
+                        if (!existingIssue.affects.includes(page.url))
                             existingIssue.affects.push(page.url);
                     } else {
                         issues.push(violationData);
@@ -211,7 +211,7 @@ async function init() {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
             if (dataHashFound) {
                 for (let i = 0; i < dataHashFound.length; ++i) {
-                    if (violations && violations.length > 0) {
+                    if (violations && violations.length >= 0) {
                         dataHashFound[i].style.display = 'none';
                     } else {
                         dataHashFound[i].style.display = 'block';
@@ -222,6 +222,18 @@ async function init() {
 
         violations.forEach(violation => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
+            if (dataHashFound) {
+                for (let i = 0; i < dataHashFound.length; ++i) {
+                    dataHashFound[i].style.display = 'block';
+                }
+            }
+        });
+        displayIssueCount();
+    }
+
+    const showAllViolations = () => {
+        issues.forEach(issue => {
+            const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
             if (dataHashFound) {
                 for (let i = 0; i < dataHashFound.length; ++i) {
                     dataHashFound[i].style.display = 'block';
@@ -283,16 +295,18 @@ async function init() {
         }, []);
 
         let violationByImpact = [];
-        if (activeFilters.length) {
+        if (activeFilters.length > 0) {
             violationByImpact = issues.filter((issue) => {
                 return activeFilters.includes(issue.impact);
             });
-        }
 
-        filterByViolationImpact(violationByImpact);
-        const searchValue = document.getElementById('search');
-        if(searchValue) {
-            searchViolations(searchValue.value);
+            filterByViolationImpact(violationByImpact);
+            const searchValue = document.getElementById('search');
+            if (searchValue) {
+                searchViolations(searchValue.value);
+            }
+        } else {
+            showAllViolations();
         }
     }
 

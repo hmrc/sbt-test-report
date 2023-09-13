@@ -21,7 +21,7 @@ import _root_.io.circe.syntax.EncoderOps
 import uk.gov.hmrc.testreport.ReportMetaData.*
 
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.{Calendar, Date}
 
 object TestReportPlugin extends AutoPlugin {
 
@@ -113,7 +113,7 @@ object TestReportPlugin extends AutoPlugin {
       val reportDataJs    = os.read(os.resource(getClass.getClassLoader) / "assets" / "data.js")
       val updatedReportJs = reportDataJs
         .replaceAllLiterally("'%INJECT_AXE_VIOLATIONS%'", axeResults)
-        .replaceAllLiterally("'%INJECT_REPORT_METADATA%'", ReportMetaData.getJsonString(reportMetaData))
+        .replaceAllLiterally("'%INJECT_REPORT_METADATA%'", jsonString)
       os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)
 
       os.write.over(

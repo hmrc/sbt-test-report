@@ -17,186 +17,108 @@
 package uk.gov.hmrc.testreport
 
 import sbt.*
-import scalatags.Text.all.*
-import com.typesafe.config.ConfigFactory
-import scala.jdk.CollectionConverters.*
+import _root_.io.circe.syntax.EncoderOps
+import uk.gov.hmrc.testreport.ReportMetaData.*
+
+import java.text.SimpleDateFormat
+import java.util.{Calendar, Date}
 
 object TestReportPlugin extends AutoPlugin {
 
+  override def trigger = allRequirements
+
   object autoImport {
     val testReport      = taskKey[Unit]("generate test report")
-    val outputDirectory = settingKey[File]("output directory")
-    val outputFile      = settingKey[File]("output file")
+    val reportDirectory = settingKey[File]("output directory")
+    val htmlReport      = settingKey[File]("output file")
   }
 
   import autoImport.*
 
-  override def trigger = allRequirements
-
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
     testReport := generateTestReport().value,
-    outputDirectory := (Keys.target.value / "test-reports" / "accessibility-assessment"),
-    outputFile := (outputDirectory.value / "html-report" / "index.html")
+    reportDirectory := (Keys.target.value / "test-reports" / "accessibility-assessment"),
+    htmlReport := (reportDirectory.value / "html-report" / "index.html")
   )
 
   private def generateTestReport(): Def.Initialize[Task[Unit]] = Def.task {
     val log                 = sbt.Keys.streams.value.log
-    val axeResultsDirectory = os.Path(outputDirectory.value / "axe-results")
+    val axeResultsDirectory = os.Path(reportDirectory.value / "axe-results")
 
     def hasAxeResults: Boolean = os.exists(axeResultsDirectory)
 
     if (hasAxeResults) {
       log.info("Generating accessibility assessment report ...")
-      os.makeDir.all(os.Path(outputDirectory.value / "html-report" / "assets"))
+      os.makeDir.all(os.Path(reportDirectory.value / "html-report" / "assets"))
 
       val assets = List(
-        "enum.1.13.5.min.js",
-        "jquery.1.13.5.dataTables.min.css",
-        "jquery.1.13.5.dataTables.min.js",
-        "jquery.3.7.0.min.js",
-        "dataTables.js",
-        "reset.css",
+        "data.js",
+        "md5.min.js",
+        "report.js",
         "style.css"
       )
 
+      val htmlReport = "index.html"
+
       assets.foreach { fileName =>
         os.write.over(
-          os.Path(outputDirectory.value / "html-report" / "assets" / fileName),
+          os.Path(reportDirectory.value / "html-report" / "assets" / fileName),
           os.read(os.resource(getClass.getClassLoader) / "assets" / fileName)
         )
       }
 
-      val axeResults = os.list.stream(axeResultsDirectory).filter(os.isDir).map { timestampDirectory =>
-        ujson.read(os.read(timestampDirectory / "axeResults.json"))
+      val axeResults = os.list
+        .stream(axeResultsDirectory)
+        .filter(os.isDir)
+        .map { timestampDirectory =>
+          val ujsonValue = ujson.read(os.read(timestampDirectory / "axe-report.json"))
+          ujson.write(ujsonValue)
+        }
+        .mkString(",")
+
+      val jenkinsBuildId  = sys.env.get("BUILD_ID")
+      val jenkinsBuildUrl = sys.env.getOrElse("BUILD_URL", "#")
+
+      def getOrdinalSuffix(day: Int): String =
+        if (day % 10 == 1 && day != 11) {
+          "st"
+        } else if (day % 10 == 2 && day != 12) {
+          "nd"
+        } else if (day % 10 == 3 && day != 13) {
+          "rd"
+        } else {
+          "th"
+        }
+
+      def formatDate(date: Date): String = {
+        val dayFormat        = new SimpleDateFormat("d")
+        val restOfDateFormat = new SimpleDateFormat("MMMM yyyy 'at' hh:mma")
+
+        val day           = dayFormat.format(date).toInt
+        val ordinalSuffix = getOrdinalSuffix(day)
+
+        s"$day$ordinalSuffix ${restOfDateFormat.format(date)}"
       }
 
-      val projectName               = Keys.name.value
-      val isJenkinsBuild            = sys.env.contains("BUILD_ID")
-      val jenkinsBuildId            = sys.env.get("BUILD_ID")
-      val jenkinsBuildUrl           = sys.env.getOrElse("BUILD_URL", "#")
-      val axeResultsVersion         = axeResults.take(1).map(firstResult => firstResult("testEngine")("version").str)
-      val axeResultsTotalCount      = axeResults.count()
-      val axeResultsViolationsCount = axeResults.map(result => result("violations").arr.length).sum
-      val reportDocumentationUrl    =
-        "https://github.com/hmrc/accessibility-assessment/blob/main/docs/READING-THE-REPORT.md"
+      val date               = formatDate(Calendar.getInstance().getTime)
+      val reportMetaData     = ReportMetaData(
+        Keys.name.value,
+        jenkinsBuildId,
+        jenkinsBuildUrl,
+        date
+      )
+      val reportMetaDataJson = reportMetaData.asJson;
+      val jsonString         = reportMetaDataJson.noSpaces
 
-      val customFiltersFileName     = "custom-filters.json"
-      def hasCustomFilters: Boolean = os.exists(os.pwd / customFiltersFileName)
-      case class UrlFilter(url: String, reason: String)
-      lazy val customUrlFilters     = ConfigFactory
-        .parseFile(new java.io.File(customFiltersFileName))
-        .getConfigList("url-filters")
-        .asScala
-        .map(config =>
-          UrlFilter(
-            config.getString("url"),
-            config.getString("reason")
-          )
-        )
-
-      def urlIsFiltered(url: String): Boolean = customUrlFilters.exists(_.url == url)
-
-      def checkUrlForFilter(url: String): String = {
-        val filtered = customUrlFilters.filter(_.url == url)
-        if (filtered.isEmpty) "" else filtered.head.reason
-      }
+      val reportDataJs    = os.read(os.resource(getClass.getClassLoader) / "assets" / "data.js")
+      val updatedReportJs = reportDataJs
+        .replaceAllLiterally("'%INJECT_AXE_VIOLATIONS%'", axeResults)
+        .replaceAllLiterally("'%INJECT_REPORT_METADATA%'", jsonString)
+      os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)
 
       os.write.over(
-        os.Path(outputFile.value),
-        "<!DOCTYPE html>" + html(
-          head(
-            meta(charset := "utf-8"),
-            meta(name := "viewport", content := "width=device-width, initial-scale=1"),
-            tag("title")(s"HMRC accessibility assessment for $projectName"),
-            meta(name := "description", content := s"HMRC accessibility assessment for $projectName"),
-            link(rel := "stylesheet", href := "assets/reset.css"),
-            link(rel := "stylesheet", href := "assets/jquery.1.13.5.dataTables.min.css"),
-            link(rel := "stylesheet", href := "assets/style.css"),
-            script(src := "assets/jquery.3.7.0.min.js"),
-            script(src := "assets/jquery.1.13.5.dataTables.min.js"),
-            script(src := "assets/enum.1.13.5.min.js")
-          ),
-          body(
-            header(
-              cls := "flow region wrapper",
-              h1("HMRC accessibility assessment for ", projectName),
-              p(
-                "Get some help from our latest ",
-                a(href := reportDocumentationUrl, "report documentation", target := "_blank"),
-                "."
-              ),
-              table(
-                cls := "summary",
-                thead(
-                  tr(th(colspan := 2, "Summary"))
-                ),
-                tbody(
-                  tr(td("Test repository"), td(a(href := s"https://github.com/hmrc/$projectName", projectName))),
-                  tr(
-                    td("Build number"),
-                    if (isJenkinsBuild) td(a(href := jenkinsBuildUrl, jenkinsBuildId))
-                    else td("N/A")
-                  ),
-                  tr(td("Pages assessed"), td(axeResultsTotalCount)),
-                  tr(td("Axe violations"), td(axeResultsViolationsCount)),
-                  tr(td("Axe version"), td(axeResultsVersion))
-                )
-              )
-            ),
-            div(
-              cls := "flow region wrapper",
-              h2(s"Axe violations ($axeResultsViolationsCount)"),
-              hr,
-              div(
-                table(
-                  id := "axe-violations",
-                  cls := "display",
-                  width := "100%",
-                  thead(
-                    tr(
-                      th("URL ", a(href := s"$reportDocumentationUrl#url-path", "(?)", target := "_blank")),
-                      th("ID ", a(href := s"$reportDocumentationUrl#code-axe-docs", "(?)", target := "_blank")),
-                      th("Description ", a(href := s"$reportDocumentationUrl#description", "(?)", target := "_blank")),
-                      th("HTML ", a(href := s"$reportDocumentationUrl#usnippet", "(?)", target := "_blank")),
-                      th("Impact ", a(href := s"$reportDocumentationUrl#severity", "(?)", target := "_blank")),
-                      th(
-                        "Further information ",
-                        a(href := s"$reportDocumentationUrl#further-information", "(?)", target := "_blank")
-                      )
-                    )
-                  ),
-                  tbody(
-                    axeResults.map { result =>
-                      val violations = result("violations").arr
-                      violations.map { violation =>
-                        tr(
-                          if (hasCustomFilters && urlIsFiltered(result("url").str))
-                            cls := "filtered-violation"
-                          else cls := "",
-                          td(result("url").str),
-                          td(a(href := violation("helpUrl").str, violation("id").str, target := "_blank")),
-                          td(violation("description").str),
-                          td(
-                            pre(
-                              violation("nodes").arr.map(instance =>
-                                pre(whiteSpace := "pre-wrap", instance("html").str)
-                              )
-                            )
-                          ),
-                          td(data.impact := violation("impact").str, violation("impact").str),
-                          if (hasCustomFilters)
-                            td(checkUrlForFilter(result("url").str))
-                          else td("")
-                        )
-                      }
-                    }
-                  )
-                )
-              )
-            ),
-            script(src := "assets/dataTables.js")
-          )
-        )
+        os.Path(reportDirectory.value / "html-report" / htmlReport),
+        os.read(os.resource(getClass.getClassLoader) / htmlReport)
       )
     } else {
       log.error("No axe results found to generate accessibility assessment report.")

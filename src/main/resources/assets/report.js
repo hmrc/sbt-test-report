@@ -18,7 +18,12 @@ async function init() {
             arefBuildUrl.innerText = reportMetaData.jenkinsBuildId;
             spanBuildNumber.appendChild(arefBuildUrl);
             paragraph.appendChild(spanBuildNumber);
-            paragraph.innerHTML += ' (' + reportMetaData.browser + ')' + ' of '
+
+            let testEnvironment = "Chrome";
+            if(axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent.includes('edge')) {
+                testEnvironment = "Edge"
+            }
+            paragraph.innerHTML += ' (' + testEnvironment + ')' + ' of '
         } else {
             paragraph.innerHTML = "Generated from ";
         }

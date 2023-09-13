@@ -366,6 +366,10 @@ button:hover {
     width: 100%
 }
 
+.hidden {
+    display: none !important;
+}
+
 .highlight {
     background: orange;
     color: black;

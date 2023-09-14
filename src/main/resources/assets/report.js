@@ -304,7 +304,11 @@ async function init() {
         if (name === "search") {
             const foundIssue = issues.find(issue => issue.dataHash === valueFromUrl);
             if (foundIssue) {
-                searchViolations(foundIssue.dataHash, [foundIssue]);
+                const violationElem = document.querySelector(`li[data-hash="${foundIssue.dataHash}"]`);
+                if(violationElem) {
+                    const elemDataImpact = violationElem.getAttribute('data-impact');
+                    searchViolations(foundIssue.dataHash, [elemDataImpact]);
+                }
             }
         }
     });

@@ -201,7 +201,7 @@ async function init() {
 
     // Search
     const highlighter = new Mark(document.getElementById("violations"));
-    const searchViolations = (value, impactFilters) => {
+    const searchViolations = (value, onFilters) => {
         // Function to hide all violations
         const hideAllViolations = () => {
             issues.forEach(issue => {
@@ -245,8 +245,8 @@ async function init() {
                 const dataHashFound = e.closest("li[data-hash]");
                 if (dataHashFound) {
                     const elemDataImpact = dataHashFound.getAttribute('data-impact');
-                    if (impactFilters && impactFilters.length > 0) {
-                        if(shouldShowElement(elemDataImpact, impactFilters)) {
+                    if (onFilters && onFilters.length > 0) {
+                        if(shouldShowElement(elemDataImpact, onFilters)) {
                             dataHashFound.classList.remove('hidden');
                         } else {
                             dataHashFound.classList.add('hidden');
@@ -269,12 +269,12 @@ async function init() {
         displayIssueCount();
     };
 
-    const filterByViolationImpact = (violations) => {
+    const filterByViolationImpact = (onFilters) => {
         issues.forEach(issue => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
             if (dataHashFound) {
                 for (let i = 0; i < dataHashFound.length; ++i) {
-                    if (violations && violations.length >= 0) {
+                    if (onFilters && onFilters.length >= 0) {
                         dataHashFound[i].classList.add('hidden');
                     } else {
                         dataHashFound[i].classList.remove('hidden');
@@ -283,7 +283,7 @@ async function init() {
             }
         });
 
-        violations.forEach(violation => {
+        onFilters.forEach(violation => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
             if (dataHashFound) {
                 for (let i = 0; i < dataHashFound.length; ++i) {
@@ -351,20 +351,17 @@ async function init() {
     }, []);
 
     const applyFilters = () => {
-        let violationByImpact = [];
         const onFilters = activeFilters(filters);
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
-            violationByImpact = issues.filter((issue) => {
-                return onFilters.includes(issue.impact);
-            });
-
             if (searchValue && searchValue.value.trim() !== "") {
-                searchViolations(searchValue.value, violationByImpact);
+                searchViolations(searchValue.value, onFilters);
             } else {
-                filterByViolationImpact(violationByImpact);
+                filterByViolationImpact(onFilters);
             }
         } else {
+            // Clear any previous highlighting
+            highlighter.unmark();
             if (searchValue && searchValue.value.trim() !== "") {
                 searchViolations(searchValue.value);
             } else {

@@ -31,6 +31,7 @@ async function init() {
         const arefProjectName = document.createElement('a');
         arefProjectName.href = "https://github.com/hmrc/" + reportMetaData.projectName;
         arefProjectName.innerText = reportMetaData.projectName;
+        arefProjectName.target = "_blank";
         paragraph.appendChild(arefProjectName);
         paragraph.innerHTML += ' on ';
         const timeStamp = document.createElement('time');
@@ -128,9 +129,7 @@ async function init() {
                 const urlViolations = clonedTemplate.getElementById('urlViolations');
                 affectsUrls.forEach(url => {
                     const urlListItem = document.createElement('li');
-                    const urlHref = document.createElement('a');
-                    urlHref.innerText = url;
-                    urlListItem.appendChild(urlHref);
+                    urlListItem.innerText = url;
                     urlViolations.append(urlListItem);
                 });
 
@@ -201,7 +200,7 @@ async function init() {
 
     // Search
     const highlighter = new Mark(document.getElementById("violations"));
-    const searchViolations = (value, impactFilters) => {
+    const searchViolations = (value, onFilters) => {
         // Function to hide all violations
         const hideAllViolations = () => {
             issues.forEach(issue => {
@@ -212,23 +211,13 @@ async function init() {
             });
         };
 
-        const shouldShowElement = (elementImpact, impactFilters) => {
-            if (impactFilters && impactFilters.length > 0) {
-                const impacts = impactFilters.map(filter => filter.impact);
-                if (impacts && impacts.length > 0) {
-                    return impacts.includes(elementImpact);
-                }
-            }
-            // If no filters are applied, show the element
-            return false;
-        };
-
         // Clear any previous highlighting
         highlighter.unmark();
 
         // If the search input is empty, show all violations and exit
         if (value.trim() === "") {
             applyFilters();
+            displayIssueCount();
             return;
         }
 
@@ -245,16 +234,28 @@ async function init() {
                 const dataHashFound = e.closest("li[data-hash]");
                 if (dataHashFound) {
                     const elemDataImpact = dataHashFound.getAttribute('data-impact');
-                    if (impactFilters && impactFilters.length > 0) {
-                        if(shouldShowElement(elemDataImpact, impactFilters)) {
+                    if (onFilters && onFilters.length > 0) {
+                        if(onFilters.includes(elemDataImpact)) {
                             dataHashFound.classList.remove('hidden');
-                        } else {
-                            dataHashFound.classList.add('hidden');
                         }
                     } else {
                         setTimeout(() => {
                             dataHashFound.classList.remove('hidden');
+                            displayIssueCount();
                         }, 250);
+                    }
+
+                    // check for affects links and expand
+                    const elemDataHash = dataHashFound.getAttribute('data-hash');
+                    const elemListItem = document.querySelector(`li[data-hash="${elemDataHash}"]`);
+                    if(elemListItem) {
+                        const affectsLink = elemListItem.querySelector('#urlViolations');
+                        if(affectsLink) {
+                            const affectsDetails = affectsLink.closest('details');
+                            if(affectsDetails) {
+                                affectsDetails.setAttribute('open', '');
+                            }
+                        }
                     }
                 }
             },
@@ -269,26 +270,18 @@ async function init() {
         displayIssueCount();
     };
 
-    const filterByViolationImpact = (violations) => {
+    const filterByViolationImpact = (onFilters) => {
         issues.forEach(issue => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
             if (dataHashFound) {
-                for (let i = 0; i < dataHashFound.length; ++i) {
-                    if (violations && violations.length >= 0) {
-                        dataHashFound[i].classList.add('hidden');
+                Array.from(dataHashFound).forEach(elem => {
+                    const elemDataImpact = elem.getAttribute('data-impact');
+                    if(onFilters.includes(elemDataImpact)) {
+                        elem.classList.remove('hidden');
                     } else {
-                        dataHashFound[i].classList.remove('hidden');
+                        elem.classList.add('hidden');
                     }
-                }
-            }
-        });
-
-        violations.forEach(violation => {
-            const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
-            if (dataHashFound) {
-                for (let i = 0; i < dataHashFound.length; ++i) {
-                    dataHashFound[i].classList.remove('hidden');
-                }
+                })
             }
         });
         displayIssueCount();
@@ -323,13 +316,29 @@ async function init() {
         if (name === "search") {
             const foundIssue = issues.find(issue => issue.dataHash === valueFromUrl);
             if (foundIssue) {
-                searchViolations(foundIssue.dataHash, [foundIssue]);
+                const violationElem = document.querySelector(`li[data-hash="${foundIssue.dataHash}"]`);
+                if(violationElem) {
+                    const elemDataImpact = violationElem.getAttribute('data-impact');
+                    searchViolations(foundIssue.dataHash, [elemDataImpact]);
+                }
             }
         }
     });
 
+    const searchTermNotValid = (term) => {
+        return term.trim().length < 4;
+    }
+
+    const searchTermValid = (term) => {
+        return term.trim().length >= 4;
+    }
+
     const search = document.getElementById("search");
     search.addEventListener("keyup", (e) => {
+        // Clear any previous highlighting
+        highlighter.unmark();
+        if(searchTermNotValid(e.target.value)) return;
+
         const onFilters = activeFilters(filters);
         if(onFilters && onFilters.length > 0) {
             applyFilters();
@@ -351,21 +360,19 @@ async function init() {
     }, []);
 
     const applyFilters = () => {
-        let violationByImpact = [];
+        // Clear any previous highlighting
+        highlighter.unmark();
+
         const onFilters = activeFilters(filters);
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
-            violationByImpact = issues.filter((issue) => {
-                return onFilters.includes(issue.impact);
-            });
-
-            if (searchValue && searchValue.value.trim() !== "") {
-                searchViolations(searchValue.value, violationByImpact);
+            if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
+                searchViolations(searchValue.value, onFilters);
             } else {
-                filterByViolationImpact(violationByImpact);
+                filterByViolationImpact(onFilters);
             }
         } else {
-            if (searchValue && searchValue.value.trim() !== "") {
+            if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
                 searchViolations(searchValue.value);
             } else {
                 showAllViolations();

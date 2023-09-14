@@ -327,6 +327,10 @@ async function init() {
 
     const search = document.getElementById("search");
     search.addEventListener("keyup", (e) => {
+        // Clear any previous highlighting
+        highlighter.unmark();
+        if(e.target.value.trim().length <= 4) return;
+
         const onFilters = activeFilters(filters);
         if(onFilters && onFilters.length > 0) {
             applyFilters();

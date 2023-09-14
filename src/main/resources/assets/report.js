@@ -253,7 +253,6 @@ async function init() {
                         }
                     } else {
                         setTimeout(() => {
-                            console.log("NO!!!!", dataHashFound, "filters", impactFilters)
                             dataHashFound.classList.remove('hidden');
                         }, 250);
                     }

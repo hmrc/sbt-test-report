@@ -2,7 +2,7 @@ lazy val root = (project in file("."))
   .enablePlugins(SbtPlugin)
   .settings(
     name := "sbt-test-report",
-    version := "0.11.0",
+    version := "0.12.0",
     scalaVersion := "2.12.17",
     libraryDependencies ++= Dependencies.compile,
     libraryDependencySchemes += "io.circe" %% "circe-core" % "early-semver",

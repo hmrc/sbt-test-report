@@ -54,6 +54,7 @@ object TestReportPlugin extends AutoPlugin {
       val assets = List(
         "data.js",
         "md5.min.js",
+        "mark.min.js",
         "report.js",
         "style.css"
       )

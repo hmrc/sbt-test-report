@@ -20,7 +20,7 @@ async function init() {
             paragraph.appendChild(spanBuildNumber);
 
             let testEnvironment = "Chrome";
-            if(axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent.includes('edge')) {
+            if(axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent.includes('Edg/')) {
                 testEnvironment = "Edge"
             }
             paragraph.innerHTML += ' (' + testEnvironment + ')' + ' of '

@@ -365,3 +365,12 @@ button:hover {
     padding-inline: var(--wrapper-space, var(--size-step-3));
     width: 100%
 }
+
+.hidden {
+    display: none !important;
+}
+
+.highlight {
+    background: orange;
+    color: black;
+}

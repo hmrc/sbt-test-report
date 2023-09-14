@@ -212,23 +212,13 @@ async function init() {
             });
         };
 
-        const shouldShowElement = (elementImpact, impactFilters) => {
-            if (impactFilters && impactFilters.length > 0) {
-                const impacts = impactFilters.map(filter => filter.impact);
-                if (impacts && impacts.length > 0) {
-                    return impacts.includes(elementImpact);
-                }
-            }
-            // If no filters are applied, show the element
-            return false;
-        };
-
         // Clear any previous highlighting
         highlighter.unmark();
 
         // If the search input is empty, show all violations and exit
         if (value.trim() === "") {
             applyFilters();
+            displayIssueCount();
             return;
         }
 
@@ -246,14 +236,13 @@ async function init() {
                 if (dataHashFound) {
                     const elemDataImpact = dataHashFound.getAttribute('data-impact');
                     if (onFilters && onFilters.length > 0) {
-                        if(shouldShowElement(elemDataImpact, onFilters)) {
+                        if(onFilters.includes(elemDataImpact)) {
                             dataHashFound.classList.remove('hidden');
-                        } else {
-                            dataHashFound.classList.add('hidden');
                         }
                     } else {
                         setTimeout(() => {
                             dataHashFound.classList.remove('hidden');
+                            displayIssueCount();
                         }, 250);
                     }
                 }
@@ -273,22 +262,14 @@ async function init() {
         issues.forEach(issue => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
             if (dataHashFound) {
-                for (let i = 0; i < dataHashFound.length; ++i) {
-                    if (onFilters && onFilters.length >= 0) {
-                        dataHashFound[i].classList.add('hidden');
+                Array.from(dataHashFound).forEach(elem => {
+                    const elemDataImpact = elem.getAttribute('data-impact');
+                    if(onFilters.includes(elemDataImpact)) {
+                        elem.classList.remove('hidden');
                     } else {
-                        dataHashFound[i].classList.remove('hidden');
+                        elem.classList.add('hidden');
                     }
-                }
-            }
-        });
-
-        onFilters.forEach(violation => {
-            const dataHashFound = document.querySelectorAll(`li[data-hash="${violation.dataHash}"]`);
-            if (dataHashFound) {
-                for (let i = 0; i < dataHashFound.length; ++i) {
-                    dataHashFound[i].classList.remove('hidden');
-                }
+                })
             }
         });
         displayIssueCount();

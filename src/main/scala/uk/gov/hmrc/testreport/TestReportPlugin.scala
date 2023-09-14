@@ -71,7 +71,7 @@ object TestReportPlugin extends AutoPlugin {
         .stream(axeResultsDirectory)
         .filter(os.isDir)
         .map { timestampDirectory =>
-          val ujsonValue = ujson.read(os.read(timestampDirectory / "axe-report.json"))
+          val ujsonValue = ujson.read(os.read(timestampDirectory / "axeResults.json"))
           ujson.write(ujsonValue)
         }
         .mkString(",")

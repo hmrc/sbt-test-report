@@ -332,6 +332,9 @@ async function init() {
     }, []);
 
     const applyFilters = () => {
+        // Clear any previous highlighting
+        highlighter.unmark();
+
         const onFilters = activeFilters(filters);
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
@@ -341,8 +344,6 @@ async function init() {
                 filterByViolationImpact(onFilters);
             }
         } else {
-            // Clear any previous highlighting
-            highlighter.unmark();
             if (searchValue && searchValue.value.trim() !== "") {
                 searchViolations(searchValue.value);
             } else {

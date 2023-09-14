@@ -325,11 +325,15 @@ async function init() {
         }
     });
 
+    let prevSearch = "NOT_STARTED";
     const search = document.getElementById("search");
     search.addEventListener("keyup", (e) => {
+
+        const searchString = e.target.value.trim();
+        if(searchString.length <= 4 || prevSearch === searchString) return;
         // Clear any previous highlighting
         highlighter.unmark();
-        if(e.target.value.trim().length <= 4) return;
+        prevSearch = searchString;
 
         const onFilters = activeFilters(filters);
         if(onFilters && onFilters.length > 0) {

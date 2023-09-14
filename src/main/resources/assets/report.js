@@ -325,15 +325,19 @@ async function init() {
         }
     });
 
-    let prevSearch = "NOT_STARTED";
+    const searchTermNotValid = (term) => {
+        return term.trim().length < 4;
+    }
+
+    const searchTermValid = (term) => {
+        return term.trim().length >= 4;
+    }
+
     const search = document.getElementById("search");
     search.addEventListener("keyup", (e) => {
-
-        const searchString = e.target.value.trim();
-        if(searchString.length <= 4 || prevSearch === searchString) return;
         // Clear any previous highlighting
         highlighter.unmark();
-        prevSearch = searchString;
+        if(searchTermNotValid(e.target.value)) return;
 
         const onFilters = activeFilters(filters);
         if(onFilters && onFilters.length > 0) {
@@ -362,13 +366,13 @@ async function init() {
         const onFilters = activeFilters(filters);
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
-            if (searchValue && searchValue.value.trim() !== "") {
+            if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
                 searchViolations(searchValue.value, onFilters);
             } else {
                 filterByViolationImpact(onFilters);
             }
         } else {
-            if (searchValue && searchValue.value.trim() !== "") {
+            if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
                 searchViolations(searchValue.value);
             } else {
                 showAllViolations();

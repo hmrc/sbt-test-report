@@ -129,9 +129,7 @@ async function init() {
                 const urlViolations = clonedTemplate.getElementById('urlViolations');
                 affectsUrls.forEach(url => {
                     const urlListItem = document.createElement('li');
-                    const urlHref = document.createElement('a');
-                    urlHref.innerText = url;
-                    urlListItem.appendChild(urlHref);
+                    urlListItem.innerText = url;
                     urlViolations.append(urlListItem);
                 });
 
@@ -245,6 +243,19 @@ async function init() {
                             dataHashFound.classList.remove('hidden');
                             displayIssueCount();
                         }, 250);
+                    }
+
+                    // check for affects links and expand
+                    const elemDataHash = dataHashFound.getAttribute('data-hash');
+                    const elemListItem = document.querySelector(`li[data-hash="${elemDataHash}"]`);
+                    if(elemListItem) {
+                        const affectsLink = elemListItem.querySelector('#urlViolations');
+                        if(affectsLink) {
+                            const affectsDetails = affectsLink.closest('details');
+                            if(affectsDetails) {
+                                affectsDetails.setAttribute('open', '');
+                            }
+                        }
                     }
                 }
             },

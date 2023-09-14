@@ -31,6 +31,7 @@ async function init() {
         const arefProjectName = document.createElement('a');
         arefProjectName.href = "https://github.com/hmrc/" + reportMetaData.projectName;
         arefProjectName.innerText = reportMetaData.projectName;
+        arefProjectName.target = "_blank";
         paragraph.appendChild(arefProjectName);
         paragraph.innerHTML += ' on ';
         const timeStamp = document.createElement('time');

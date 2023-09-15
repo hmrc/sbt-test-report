@@ -6,6 +6,8 @@ async function init() {
     // Init
     let initialSearchParams = new URLSearchParams(window.location.search);
 
+    const search = document.getElementById("search");
+
     // Create page header with report metadata
     if (reportMetaData) {
         const reportMetaDataElement = document.getElementById('headerMetaData');
@@ -20,7 +22,7 @@ async function init() {
             paragraph.appendChild(spanBuildNumber);
 
             let testEnvironment = "Chrome";
-            if(axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent.includes('Edg/')) {
+            if (axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent.includes('Edg/')) {
                 testEnvironment = "Edge"
             }
             paragraph.innerHTML += ' (' + testEnvironment + ')' + ' of '
@@ -42,6 +44,21 @@ async function init() {
 
         const footerProjectLinkElement = document.getElementById('footerProjectLink');
         footerProjectLinkElement.append(arefProjectName);
+    }
+
+    const debounce = (func, delay) => {
+        let timeoutId;
+
+        return function () {
+            const context = this;
+            const args = arguments;
+
+            clearTimeout(timeoutId);
+
+            timeoutId = setTimeout(function () {
+                func.apply(context, args);
+            }, delay);
+        };
     }
 
     const removeSearchFromUrlParams = () => {
@@ -200,7 +217,9 @@ async function init() {
 
     // Search
     const highlighter = new Mark(document.getElementById("violations"));
-    const searchViolations = (value, onFilters) => {
+    const searchViolations = (onFilters) => {
+        const value = search.value;
+
         // Function to hide all violations
         const hideAllViolations = () => {
             issues.forEach(issue => {
@@ -213,6 +232,7 @@ async function init() {
 
         // Clear any previous highlighting
         highlighter.unmark();
+        if(searchTermNotValid(value)) return;
 
         // If the search input is empty, show all violations and exit
         if (value.trim() === "") {
@@ -235,7 +255,7 @@ async function init() {
                 if (dataHashFound) {
                     const elemDataImpact = dataHashFound.getAttribute('data-impact');
                     if (onFilters && onFilters.length > 0) {
-                        if(onFilters.includes(elemDataImpact)) {
+                        if (onFilters.includes(elemDataImpact)) {
                             dataHashFound.classList.remove('hidden');
                         }
                     } else {
@@ -248,11 +268,11 @@ async function init() {
                     // check for affects links and expand
                     const elemDataHash = dataHashFound.getAttribute('data-hash');
                     const elemListItem = document.querySelector(`li[data-hash="${elemDataHash}"]`);
-                    if(elemListItem) {
+                    if (elemListItem) {
                         const affectsLink = elemListItem.querySelector('#urlViolations');
-                        if(affectsLink) {
+                        if (affectsLink) {
                             const affectsDetails = affectsLink.closest('details');
-                            if(affectsDetails) {
+                            if (affectsDetails) {
                                 affectsDetails.setAttribute('open', '');
                             }
                         }
@@ -276,7 +296,7 @@ async function init() {
             if (dataHashFound) {
                 Array.from(dataHashFound).forEach(elem => {
                     const elemDataImpact = elem.getAttribute('data-impact');
-                    if(onFilters.includes(elemDataImpact)) {
+                    if (onFilters.includes(elemDataImpact)) {
                         elem.classList.remove('hidden');
                     } else {
                         elem.classList.add('hidden');
@@ -317,9 +337,10 @@ async function init() {
             const foundIssue = issues.find(issue => issue.dataHash === valueFromUrl);
             if (foundIssue) {
                 const violationElem = document.querySelector(`li[data-hash="${foundIssue.dataHash}"]`);
-                if(violationElem) {
+                if (violationElem) {
                     const elemDataImpact = violationElem.getAttribute('data-impact');
-                    searchViolations(foundIssue.dataHash, [elemDataImpact]);
+                    search.value = foundIssue.dataHash;
+                    searchViolations([elemDataImpact]);
                 }
             }
         }
@@ -333,17 +354,16 @@ async function init() {
         return term.trim().length >= 4;
     }
 
-    const search = document.getElementById("search");
+    const debounceSearch = debounce(searchViolations, 500);
     search.addEventListener("keyup", (e) => {
         // Clear any previous highlighting
         highlighter.unmark();
-        if(searchTermNotValid(e.target.value)) return;
 
         const onFilters = activeFilters(filters);
-        if(onFilters && onFilters.length > 0) {
+        if (onFilters && onFilters.length > 0) {
             applyFilters();
         } else {
-            searchViolations(e.target.value);
+            debounceSearch();
         }
     });
 
@@ -367,13 +387,13 @@ async function init() {
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
             if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
-                searchViolations(searchValue.value, onFilters);
+                searchViolations(onFilters);
             } else {
                 filterByViolationImpact(onFilters);
             }
         } else {
             if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
-                searchViolations(searchValue.value);
+                searchViolations();
             } else {
                 showAllViolations();
             }

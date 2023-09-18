@@ -215,6 +215,14 @@ async function init() {
         event.preventDefault();
     });
 
+    const searchTermNotValid = (term) => {
+        return term.trim().length < 4;
+    }
+
+    const searchTermValid = (term) => {
+        return term.trim().length >= 4;
+    }
+
     // Search
     const highlighter = new Mark(document.getElementById("violations"));
     const searchViolations = (onFilters) => {
@@ -345,14 +353,6 @@ async function init() {
             }
         }
     });
-
-    const searchTermNotValid = (term) => {
-        return term.trim().length < 4;
-    }
-
-    const searchTermValid = (term) => {
-        return term.trim().length >= 4;
-    }
 
     const debounceSearch = debounce(searchViolations, 500);
     search.addEventListener("keyup", (e) => {

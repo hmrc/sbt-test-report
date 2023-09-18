@@ -4933,13 +4933,13 @@
         "best-practice"
       ],
       "description": "Ensures all page content is contained by landmarks",
-      "help": "All page content should be contained by landmarks",
+      "help": "Ensures ARIA attributes are allowed for an element's role",
       "helpUrl": "https://dequeuniversity.com/rules/axe/4.7/region?application=axeAPI",
       "nodes": [
         {
           "any": [
             {
-              "id": "region",
+              "id": "aria-allowed-attr",
               "data": {
                 "isIframe": false
               },

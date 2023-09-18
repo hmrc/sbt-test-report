@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const {describe, beforeAll, afterAll, expect, it} = require('@jest/globals');
+const {describe, beforeEach, beforeAll, afterAll, expect, it} = require('@jest/globals');
 
 describe('Accessibility Report', () => {
     let page;
@@ -9,6 +9,9 @@ describe('Accessibility Report', () => {
         browser = await puppeteer.launch({
             headless: false
         });
+    });
+
+    beforeEach(async () => {
         page = await browser.newPage();
         await page.goto('http://localhost:3000/');
     });
@@ -56,43 +59,104 @@ describe('Accessibility Report', () => {
 
             const violations = await page.$$eval('li[data-impact]', els => els.map(el => el.getAttribute('data-impact')));
             expect(violations.length).toBe(4);
-            expect(violations).toEqual([ 'critical', 'critical', 'moderate', 'info' ]);
+            expect(violations).toEqual(['critical', 'critical', 'moderate', 'info']);
         });
     });
 
-});
+    const searchFor = async (term) => {
+        const searchInput = await page.$('#search');
+        searchInput.type(term);
+        await page.waitForTimeout(1000);
+    }
+    const getVisibleViolations = async () => {
+        return await page.$$eval('li[data-hash]:not(.hidden)', els => els.map(el => el.getAttribute('data-impact')));
+    }
 
-/*
-(async () => {
-    // Launch the browser and open a new blank page
-    const browser = await puppeteer.launch({
-        headless: false
+    describe('Search', () => {
+        it('should show 1 matching violation"', async () => {
+            await searchFor('ARIA');
+
+            const visibleViolations = await getVisibleViolations();
+
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("Displaying 1 of 4 issues identified.")
+
+            expect(visibleViolations.length).toEqual(1);
+            expect(visibleViolations).toEqual([ 'moderate' ]);
+        });
+
+        it('should show 0 violations when nothing matches"', async () => {
+            await searchFor('XYZ');
+
+            await page.waitForFunction(
+                (expectedText) => {
+                    const element = document.querySelector('#issueCount');
+                    return element && element.textContent === expectedText;
+                },
+                {},
+                "No issues identified.",
+                {timeout: 2000}
+            );
+
+            const violations = await page.$$eval('li[data-hash]:not(.hidden)', els => els.map(el => el.getAttribute('data-impact')));
+            expect(violations.length).toBe(0);
+        });
     });
-    const page = await browser.newPage();
 
-    // Navigate the page to a URL
-    await page.goto('http://localhost:3000/');
+    describe('Checkbox filtering', () => {
+        it('should show only critical violations when critical impact checkbox is selected"', async () => {
+            const impactCritical = await page.$('#impact-critical');
+            impactCritical.click();
 
+            await page.waitForFunction(
+                (expectedText) => {
+                    const element = document.querySelector('#issueCount');
+                    return element && element.textContent === expectedText;
+                },
+                {},
+                "Displaying 2 of 4 issues identified.",
+                {timeout: 2000}
+            );
 
+            const violations = await page.$$eval('li[data-hash]:not(.hidden)', els => els.map(el => el.getAttribute('data-impact')));
+            expect(violations.length).toBe(2);
+            expect(violations).toEqual(['critical', 'critical']);
+        });
+    });
 
-    // Set screen size
-    await page.setViewport({width: 1080, height: 1024});
+   /* describe('User journey', () => {
+        it('xyzc"', async () => {
+            const searchInput = await page.$('#search');
+            searchInput.type('XYZ');
 
-    // Type into search box
-    await page.type('.search-box__input', 'automate beyond recorder');
+            await page.waitForFunction(
+                (expectedText) => {
+                    const element = document.querySelector('#issueCount');
+                    return element && element.textContent === expectedText;
+                },
+                {},
+                "No issues identified.",
+                {timeout: 2000}
+            );
 
-    // Wait and click on first result
-    const searchResultSelector = '.search-box__link';
-    await page.waitForSelector(searchResultSelector);
-    await page.click(searchResultSelector);
+            const impactCritical = await page.$('#impact-critical');
+            impactCritical.click();
 
-    // Locate the full title with a unique string
-    const textSelector = await page.waitForSelector(
-        'text/Customize and automate'
-    );
-    const fullTitle = await textSelector?.evaluate(el => el.textContent);
+            const clearBtn = await page.$('#clear');
+            clearBtn.click();
 
-    // Print the full title
-    console.log('The title of this blog post is "%s".', fullTitle);
-    await browser.close();
-})();*/
+            await page.waitForFunction(
+                (expectedText) => {
+                    const element = document.querySelector('#issueCount');
+                    return element && element.textContent === expectedText;
+                },
+                {},
+                "Displaying 4 of 4 issues identified.",
+                {timeout: 2000}
+            );
+
+            const searchInputValue = await page.$eval('#search', el => el.value);
+            expect(searchInputValue).toBe('');
+        });
+    });*/
+});

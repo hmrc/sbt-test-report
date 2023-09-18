@@ -215,12 +215,13 @@ async function init() {
         event.preventDefault();
     });
 
+    const minimumSearchLength = 1;
     const searchTermNotValid = (term) => {
-        return term.trim().length < 4;
+        return term.trim().length < minimumSearchLength;
     }
 
     const searchTermValid = (term) => {
-        return term.trim().length >= 4;
+        return term.trim().length >= minimumSearchLength;
     }
 
     // Search

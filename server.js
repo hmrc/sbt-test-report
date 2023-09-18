@@ -3,9 +3,9 @@ const fs = require('fs');
 const path = require("path");
 
 const originalDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js');
-const backupDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js.bak'); // Backup file name
+const backupDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js.bak');
 
-// Define the command to run lite-server
+// start the lite-server
 spawn('npx', ['lite-server']);
 
 process.on('SIGINT', () => {

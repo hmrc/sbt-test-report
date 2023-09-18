@@ -5,14 +5,11 @@ const path = require("path");
 const reportMetaData = require("./src/test/resources/report_meta_data.json");
 const axeAssessedPages = require("./src/test/resources/axe_results.json");
 
-// const reportMetaData = {name: 'Your report metadata here'};
-// const axeAssessedPages = [{a:'Page 1', b:'Page 2', c:'Page 3'}]; // Example values
-
 const dataJsFile = __dirname + '/src/main/resources/assets/data.js';
 
 // Define a path to the original data.js file and a backup file
 const originalDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js');
-const backupDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js.bak'); // Backup file name
+const backupDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js.bak');
 
 const startServer = async () => {
     // Check if a backup of data.js exists, and if not, create one from the original

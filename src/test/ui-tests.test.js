@@ -4,10 +4,11 @@ const {describe, beforeEach, beforeAll, afterAll, expect, it} = require('@jest/g
 describe('Accessibility Report', () => {
     let page;
     let browser;
+    const pageRefreshDelay = 1000;
 
     beforeAll(async () => {
         browser = await puppeteer.launch({
-            headless: false
+            headless: "new"
         });
     });
 
@@ -20,23 +21,21 @@ describe('Accessibility Report', () => {
         await browser.close();
     })
 
-    /*
-        Search:
-        Not applied
-        Applied with text found
-        Applied with text not found
+    const searchFor = async (term) => {
+        const searchInput = await page.$('#search');
+        searchInput.type(term);
+        await page.waitForTimeout(pageRefreshDelay);
+    }
 
-        Checkbox:
-        Not applied
-        Applied with impact displayed
-        Applied with impact not displayed
+    const clickOn = async (selector) => {
+        const element = await page.$(selector);
+        element.click();
+        await page.waitForTimeout(pageRefreshDelay);
+    }
 
-        Clear:
-        Clear on click
-
-        URL:
-        Permalink - display issue only
-    */
+    const getVisibleViolations = async () => {
+        return await page.$$eval('li[data-hash]:not(.hidden)', els => els.map(el => el.getAttribute('data-impact')));
+    }
 
     describe('On initial page load', () => {
         it('should show 4 violations in the correct order with no filtering applied"', async () => {
@@ -58,105 +57,83 @@ describe('Accessibility Report', () => {
             expect(impactInfo).toBeFalsy();
 
             const violations = await page.$$eval('li[data-impact]', els => els.map(el => el.getAttribute('data-impact')));
-            expect(violations.length).toBe(4);
             expect(violations).toEqual(['critical', 'critical', 'moderate', 'info']);
         });
     });
-
-    const searchFor = async (term) => {
-        const searchInput = await page.$('#search');
-        searchInput.type(term);
-        await page.waitForTimeout(1000);
-    }
-    const getVisibleViolations = async () => {
-        return await page.$$eval('li[data-hash]:not(.hidden)', els => els.map(el => el.getAttribute('data-impact')));
-    }
 
     describe('Search', () => {
         it('should show 1 matching violation"', async () => {
             await searchFor('ARIA');
 
-            const visibleViolations = await getVisibleViolations();
-
             const issueCount = await page.$eval('#issueCount', el => el.textContent);
             expect(issueCount).toBe("Displaying 1 of 4 issues identified.")
 
-            expect(visibleViolations.length).toEqual(1);
+            const visibleViolations = await getVisibleViolations();
             expect(visibleViolations).toEqual([ 'moderate' ]);
         });
 
         it('should show 0 violations when nothing matches"', async () => {
             await searchFor('XYZ');
 
-            await page.waitForFunction(
-                (expectedText) => {
-                    const element = document.querySelector('#issueCount');
-                    return element && element.textContent === expectedText;
-                },
-                {},
-                "No issues identified.",
-                {timeout: 2000}
-            );
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("No issues identified.")
 
-            const violations = await page.$$eval('li[data-hash]:not(.hidden)', els => els.map(el => el.getAttribute('data-impact')));
-            expect(violations.length).toBe(0);
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations.length).toEqual(0);
         });
     });
 
     describe('Checkbox filtering', () => {
         it('should show only critical violations when critical impact checkbox is selected"', async () => {
-            const impactCritical = await page.$('#impact-critical');
-            impactCritical.click();
+            await clickOn('#impact-critical');
 
-            await page.waitForFunction(
-                (expectedText) => {
-                    const element = document.querySelector('#issueCount');
-                    return element && element.textContent === expectedText;
-                },
-                {},
-                "Displaying 2 of 4 issues identified.",
-                {timeout: 2000}
-            );
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("Displaying 2 of 4 issues identified.")
 
-            const violations = await page.$$eval('li[data-hash]:not(.hidden)', els => els.map(el => el.getAttribute('data-impact')));
-            expect(violations.length).toBe(2);
-            expect(violations).toEqual(['critical', 'critical']);
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual(['critical', 'critical']);
         });
     });
 
-   /* describe('User journey', () => {
+    describe('User simulated interactions', () => {
         it('xyzc"', async () => {
-            const searchInput = await page.$('#search');
-            searchInput.type('XYZ');
+            // 1. user clicks permalink - 1 result should be found
+            await clickOn('#violationPermaLink');
 
-            await page.waitForFunction(
-                (expectedText) => {
-                    const element = document.querySelector('#issueCount');
-                    return element && element.textContent === expectedText;
-                },
-                {},
-                "No issues identified.",
-                {timeout: 2000}
-            );
-
-            const impactCritical = await page.$('#impact-critical');
-            impactCritical.click();
-
-            const clearBtn = await page.$('#clear');
-            clearBtn.click();
-
-            await page.waitForFunction(
-                (expectedText) => {
-                    const element = document.querySelector('#issueCount');
-                    return element && element.textContent === expectedText;
-                },
-                {},
-                "Displaying 4 of 4 issues identified.",
-                {timeout: 2000}
-            );
+            const permaLinkValue = await page.$eval('#violationPermaLink',
+                    el => el.closest('li[data-hash]').getAttribute('data-hash'));
 
             const searchInputValue = await page.$eval('#search', el => el.value);
-            expect(searchInputValue).toBe('');
+            expect(searchInputValue).toBe(permaLinkValue);
+
+            let visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual(['critical']);
+
+            // 2. user clicks on impact serious - 0 results found?
+            await clickOn('#impact-serious');
+
+            visibleViolations = await getVisibleViolations();
+            expect(visibleViolations.length).toBe(0);
+
+            // 3. user also clicks on moderate - x results found
+            await clickOn('#impact-moderate');
+
+            visibleViolations = await getVisibleViolations();
+            expect(visibleViolations.length).toBe(0);
+
+            // 4. user removes search term - x results found
+            await page.$eval('#search', el => el.value = '');
+            await page.focus('#search');
+            await page.keyboard.press('Backspace');
+
+            visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual(['moderate']);
+
+            // 5. user clicks clear - initial page results displayed
+            await clickOn('#clear');
+
+            visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual(['critical', 'critical', 'moderate', 'info']);
         });
-    });*/
+    });
 });

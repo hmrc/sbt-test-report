@@ -14,7 +14,10 @@ describe('Accessibility Report', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
-        await page.goto('http://localhost:3000/');
+        await page.goto('http://localhost:3000/').catch(() => {
+            console.log("NOTE: Please start the server using `npm start` before running tests!");
+            process.exit(1);
+        });
     });
 
     afterAll(async () => {
@@ -96,7 +99,7 @@ describe('Accessibility Report', () => {
     });
 
     describe('User simulated interactions', () => {
-        it('xyzc"', async () => {
+        it('Permutation 1"', async () => {
             // 1. user clicks permalink - 1 result should be found
             await clickOn('#violationPermaLink');
 

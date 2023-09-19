@@ -6,7 +6,8 @@
     "start": "npm-run-all --sequential copy server",
     "copy": "node prepare.js",
     "server": "node server.js",
-    "test": "jest ./src/test --runInBand --detectOpenHandles"
+    "test": "jest ./src/test --runInBand --detectOpenHandles",
+    "pre-commit": ".husky/pre-commit"
   },
   "husky": {
     "hooks": {

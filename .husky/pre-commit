@@ -1,4 +1,20 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/bash
 
-npm test
+# Define the port to check (e.g., port 3000)
+PORT_TO_CHECK=3000
+
+# Function to check if a port is in use
+function is_port_in_use() {
+    nc -zv 127.0.0.1 $1 2>&1 | grep "succeeded" >/dev/null
+}
+
+# Check if the specified port is in use
+is_port_in_use $PORT_TO_CHECK
+
+if [ $? -eq 0 ]; then
+    echo "Port $PORT_TO_CHECK is in use. Please stop the service running on this port before committing."
+    exit 1
+else
+    echo "Port $PORT_TO_CHECK is not in use. Committing..."
+    exit 0
+fi

@@ -41,6 +41,12 @@ describe('Accessibility Report', () => {
     }
 
     describe('On initial page load', () => {
+
+        it('header should display report meta data"', async () => {
+           const reportHeaderMetaData = await page.$eval('#headerMetaData', el => el.textContent);
+           expect(reportHeaderMetaData).toBe('Generated from build #42 (Chrome) of platform-example-ui-tests on 09-11-2023');
+        });
+
         it('should show 4 violations in the correct order with no filtering applied"', async () => {
             await expect(page.title()).resolves.toMatch('Accessibility assessment report');
 

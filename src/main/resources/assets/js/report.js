@@ -9,42 +9,8 @@ async function init() {
     const search = document.getElementById("search");
 
     // Create page header with report metadata
-    if (reportMetaData) {
-        const reportMetaDataElement = document.getElementById('headerMetaData');
-        const spanBuildNumber = document.createElement('span');
-        const paragraph = document.createElement('p');
-        if (reportMetaData.jenkinsBuildId) {
-            paragraph.innerHTML = "Generated from build ";
-            const arefBuildUrl = document.createElement('a');
-            arefBuildUrl.href = reportMetaData.jenkinsBuildUrl;
-            arefBuildUrl.innerText = reportMetaData.jenkinsBuildId;
-            spanBuildNumber.appendChild(arefBuildUrl);
-            paragraph.appendChild(spanBuildNumber);
-
-            let testEnvironment = "Chrome";
-            if (axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent.includes('Edg/')) {
-                testEnvironment = "Edge"
-            }
-            paragraph.innerHTML += ' (' + testEnvironment + ')' + ' of '
-        } else {
-            paragraph.innerHTML = "Generated from ";
-        }
-
-        const arefProjectName = document.createElement('a');
-        arefProjectName.href = "https://github.com/hmrc/" + reportMetaData.projectName;
-        arefProjectName.innerText = reportMetaData.projectName;
-        arefProjectName.target = "_blank";
-        paragraph.appendChild(arefProjectName);
-        paragraph.innerHTML += ' on ';
-        const timeStamp = document.createElement('time');
-        timeStamp.dateTime = reportMetaData.dateOfAssessment;
-        timeStamp.innerText = reportMetaData.dateOfAssessment;
-        paragraph.appendChild(timeStamp);
-        reportMetaDataElement.appendChild(paragraph);
-
-        const footerProjectLinkElement = document.getElementById('footerProjectLink');
-        footerProjectLinkElement.append(arefProjectName);
-    }
+    reportMetaData.testEnvironment = axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent; // TODO: should be apart of the report meta data json
+    metaDataHeader(reportMetaData);
 
     const debounce = (func, delay) => {
         let timeoutId;

@@ -33,7 +33,6 @@ const injectJsonData = async (reportMetaDataJson, axeAssessedPagesJson) => {
         await fs.writeFile(dataJsFile, data, 'utf8', (err) => {
             if (err) {
                 console.error('Error writing data.js:', err);
-                return;
             }
         });
     });

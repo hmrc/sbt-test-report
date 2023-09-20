@@ -50,7 +50,7 @@ describe('Accessibility Report', () => {
     describe('On initial page load', () => {
 
         it('header should display report meta data from jenkins"', async () => {
-           const reportHeaderMetaData = await page.$eval('#headerMetaData', el => el.textContent);
+           const reportHeaderMetaData = await page.$eval('#metaDataHeader', el => el.textContent);
            expect(reportHeaderMetaData).toBe('Generated from build #42 (Chrome) of platform-example-ui-tests on 09-11-2023');
         });
 
@@ -62,7 +62,7 @@ describe('Accessibility Report', () => {
                 "dateOfAssessment": "09-16-2023"
             }, page);
 
-            const reportHeaderMetaData = await page.$eval('#headerMetaData', el => el.textContent);
+            const reportHeaderMetaData = await page.$eval('#metaDataHeader', el => el.textContent);
             expect(reportHeaderMetaData).toBe('Generated from platform-example-ui-tests on 09-16-2023');
         });
 

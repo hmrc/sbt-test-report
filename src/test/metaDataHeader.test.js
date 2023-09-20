@@ -4,13 +4,15 @@
 
 const {test, describe, beforeEach, expect} = require('@jest/globals');
 const metaDataHeader = require("../../src/main/resources/assets/js/metaDataHeader");
+let reportMetaDataElement;
 
 beforeEach(() => {
     document.body.innerHTML =
         '<div>' +
-        '<div id="metaDataHeader"></div>' +
-        '<span id="footerProjectLink"></span>'
-    '</div>';
+            '<div id="metaDataHeader"></div>' +
+        '</div>';
+
+    reportMetaDataElement = document.getElementById('metaDataHeader');
 })
 
 describe('with Jenkins build metadata', () => {
@@ -23,7 +25,7 @@ describe('with Jenkins build metadata', () => {
         }
         reportMetaData.testEnvironment = "Chrome"; // TODO: should be apart of the report meta data json
 
-        metaDataHeader(reportMetaData);
+        metaDataHeader(reportMetaDataElement, reportMetaData);
 
         const metaData = document.querySelector('p');
         expect(metaData.textContent).toBe("Generated from build #42 (Chrome) of platform-example-ui-tests on 09-11-2023");
@@ -51,7 +53,7 @@ describe("without Jenkins build metadata (eg. run locally)", () => {
         }
         reportMetaData.testEnvironment = "Chrome"; // TODO: should be apart of the report meta data json
 
-        metaDataHeader(reportMetaData);
+        metaDataHeader(reportMetaDataElement, reportMetaData);
 
         const metaData = document.querySelector('p');
         expect(metaData.textContent).toBe("Generated from platform-example-ui-tests on 09-12-2023");

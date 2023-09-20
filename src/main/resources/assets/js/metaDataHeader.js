@@ -1,39 +1,56 @@
-function metaDataHeader(reportMetaData) {
-    if (reportMetaData) {
-        const reportMetaDataElement = document.getElementById('metaDataHeader');
+function createTimestampSection(dateOfAssessment) {
+    const timeStamp = document.createElement('time');
+    timeStamp.dateTime = dateOfAssessment;
+    timeStamp.textContent = dateOfAssessment;
+
+    return timeStamp;
+}
+
+function createProjectNameSection(projectName) {
+    const arefProjectName = document.createElement('a');
+    arefProjectName.href = "https://github.com/hmrc/" + projectName;
+    arefProjectName.textContent = projectName;
+    arefProjectName.target = "_blank";
+
+    return arefProjectName;
+}
+
+function addBuildSection(paragraph, jenkinsBuildId, jenkinsBuildUrl, testEnvironment) {
+    if (jenkinsBuildId) {
+        paragraph.innerHTML += "build ";
+
+        const arefBuildUrl = document.createElement('a');
+        arefBuildUrl.href = jenkinsBuildUrl;
+        arefBuildUrl.textContent = jenkinsBuildId;
+
         const spanBuildNumber = document.createElement('span');
-        const paragraph = document.createElement('p');
-        if (reportMetaData.jenkinsBuildId) {
-            paragraph.innerHTML = "Generated from build ";
-            const arefBuildUrl = document.createElement('a');
-            arefBuildUrl.href = reportMetaData.jenkinsBuildUrl;
-            arefBuildUrl.textContent = reportMetaData.jenkinsBuildId;
-            spanBuildNumber.appendChild(arefBuildUrl);
-            paragraph.appendChild(spanBuildNumber);
+        spanBuildNumber.appendChild(arefBuildUrl);
+        paragraph.appendChild(spanBuildNumber);
 
-            let userAgent = "Chrome";
-            if (reportMetaData.testEnvironment && reportMetaData.testEnvironment.includes('Edg/')) {
-                userAgent = "Edge"
-            }
-            paragraph.innerHTML += ' (' + userAgent + ')' + ' of '
-        } else {
-            paragraph.innerHTML = "Generated from ";
+        let userAgent = "Chrome"; // only chrome and edge are supported so default to chrome if user agent is not edge
+        if (testEnvironment && testEnvironment.includes('Edg/')) {
+            userAgent = "Edge"
         }
+        paragraph.innerHTML += ' (' + userAgent + ')' + ' of '
+    }
 
-        const arefProjectName = document.createElement('a');
-        arefProjectName.href = "https://github.com/hmrc/" + reportMetaData.projectName;
-        arefProjectName.textContent = reportMetaData.projectName;
-        arefProjectName.target = "_blank";
-        paragraph.appendChild(arefProjectName);
+    return paragraph;
+}
+
+function metaDataHeader(parentElement, reportMetaData) {
+    if (reportMetaData) {
+        const paragraph = document.createElement('p');
+        paragraph.innerHTML = "Generated from ";
+
+        addBuildSection(paragraph, reportMetaData.jenkinsBuildId, reportMetaData.jenkinsBuildUrl, reportMetaData.testEnvironment);
+
+        paragraph.appendChild(createProjectNameSection(reportMetaData.projectName));
+
         paragraph.innerHTML += ' on ';
-        const timeStamp = document.createElement('time');
-        timeStamp.dateTime = reportMetaData.dateOfAssessment;
-        timeStamp.textContent = reportMetaData.dateOfAssessment;
-        paragraph.appendChild(timeStamp);
-        reportMetaDataElement.appendChild(paragraph);
 
-        const footerProjectLinkElement = document.getElementById('footerProjectLink');
-        footerProjectLinkElement.append(arefProjectName);
+        paragraph.appendChild(createTimestampSection(reportMetaData.dateOfAssessment));
+
+        parentElement.appendChild(paragraph);
     }
 }
 

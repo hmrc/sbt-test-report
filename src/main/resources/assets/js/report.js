@@ -7,10 +7,11 @@ async function init() {
     let initialSearchParams = new URLSearchParams(window.location.search);
 
     const search = document.getElementById("search");
+    const reportMetaDataElement = document.getElementById('metaDataHeader');
 
     // Create page header with report metadata
     reportMetaData.testEnvironment = axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent; // TODO: should be apart of the report meta data json
-    metaDataHeader(reportMetaData);
+    metaDataHeader(reportMetaDataElement, reportMetaData);
 
     const debounce = (func, delay) => {
         let timeoutId;

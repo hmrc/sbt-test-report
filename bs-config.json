@@ -1,0 +1,12 @@
+{
+  "files": [
+    "./src/main/resources/**/*.{html,htm,css,js}"
+  ],
+  "watch": true,
+  "server": {
+    "baseDir": "./src/main/resources",
+    "index": "./src/main/resources/index.html"
+  },
+  "notify": false,
+  "injectChanges": true
+}

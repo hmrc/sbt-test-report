@@ -113,8 +113,8 @@ object TestReportPlugin extends AutoPlugin {
 
       val reportDataJs    = os.read(os.resource(getClass.getClassLoader) / "assets" / "data.js")
       val updatedReportJs = reportDataJs
-        .replaceAllLiterally("'%INJECT_AXE_VIOLATIONS%'", axeResults)
-        .replaceAllLiterally("'%INJECT_REPORT_METADATA%'", jsonString)
+        .replaceAllLiterally("INJECT_AXE_VIOLATIONS", axeResults)
+        .replaceAllLiterally("INJECT_REPORT_METADATA", jsonString)
       os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)
 
       os.write.over(

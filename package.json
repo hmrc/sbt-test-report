@@ -1,0 +1,25 @@
+{
+  "name": "sbt-test-report",
+  "version": "1.0.0",
+  "description": "A plugin for the accessibility test report at HMRC.",
+  "scripts": {
+    "start": "npm-run-all --sequential copy server",
+    "copy": "node prepare.js",
+    "server": "node server.js",
+    "test": "jest ./src/test --runInBand --detectOpenHandles",
+    "pre-commit": ".husky/pre-commit",
+    "prepare": "husky install"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run pre-commit"
+    }
+  },
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "jest": "^29.7.0",
+    "lite-server": "^2.6.1",
+    "npm-run-all": "^4.1.5",
+    "puppeteer": "20.0.0"
+  }
+}

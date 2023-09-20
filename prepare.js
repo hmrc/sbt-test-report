@@ -39,7 +39,7 @@ const injectJsonData = async (reportMetaDataJson, axeAssessedPagesJson) => {
     });
 }
 
-const startServer = async () => {
+const prepareJsonData = async () => {
     // Check if a backup of data.js exists, and if not, create one from the original
     if (!fs.existsSync(backupDataJsPath)) {
         fs.copyFileSync(originalDataJsPath, backupDataJsPath);
@@ -47,7 +47,7 @@ const startServer = async () => {
         await injectJsonData(JSON.stringify(reportMetaData), JSON.stringify(axeAssessedPages))
     }
 }
-startServer();
+prepareJsonData();
 
 module.exports = injectJsonData;
 

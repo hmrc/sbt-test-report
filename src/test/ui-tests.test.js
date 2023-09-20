@@ -11,7 +11,7 @@ describe('Accessibility Report', () => {
 
     beforeAll(async () => {
         browser = await puppeteer.launch({
-            headless: false
+            headless: "new"
         });
     });
 

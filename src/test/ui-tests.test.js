@@ -1,5 +1,8 @@
 const puppeteer = require('puppeteer');
+const {resetData, interceptReportMetaData, interceptAxeAssessedPages} = require('./intercept');
 const {describe, beforeEach, beforeAll, afterAll, expect, it} = require('@jest/globals');
+
+jest.setTimeout(20000);
 
 describe('Accessibility Report', () => {
     let page;
@@ -8,12 +11,13 @@ describe('Accessibility Report', () => {
 
     beforeAll(async () => {
         browser = await puppeteer.launch({
-            headless: "new"
+            headless: false
         });
     });
 
     beforeEach(async () => {
         page = await browser.newPage();
+        await resetData(page);
         await page.goto('http://localhost:3000/').catch(() => {
             console.log("NOTE: Please start the server using `npm start` before running tests!");
             process.exit(1);
@@ -42,9 +46,21 @@ describe('Accessibility Report', () => {
 
     describe('On initial page load', () => {
 
-        it('header should display report meta data"', async () => {
+        it('header should display report meta data from jenkins"', async () => {
            const reportHeaderMetaData = await page.$eval('#headerMetaData', el => el.textContent);
            expect(reportHeaderMetaData).toBe('Generated from build #42 (Chrome) of platform-example-ui-tests on 09-11-2023');
+        });
+
+        it('header should display report meta data from localhost"', async () => {
+            await interceptReportMetaData({
+                "projectName": "platform-example-ui-tests",
+                "jenkinsBuildId": null,
+                "jenkinsBuildUrl": null,
+                "dateOfAssessment": "09-16-2023"
+            }, page);
+
+            const reportHeaderMetaData = await page.$eval('#headerMetaData', el => el.textContent);
+            expect(reportHeaderMetaData).toBe('Generated from platform-example-ui-tests on 09-16-2023');
         });
 
         it('should show 4 violations in the correct order with no filtering applied"', async () => {

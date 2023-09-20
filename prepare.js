@@ -11,11 +11,16 @@ const dataJsFile = __dirname + '/src/main/resources/assets/data.js';
 const originalDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js');
 const backupDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js.bak');
 
-const startServer = async () => {
-    // Check if a backup of data.js exists, and if not, create one from the original
-    if (!fs.existsSync(backupDataJsPath)) {
-        fs.copyFileSync(originalDataJsPath, backupDataJsPath);
+const injectJsonData = async (reportMetaDataJson, axeAssessedPagesJson) => {
+    if(reportMetaDataJson === undefined) {
+        reportMetaDataJson = JSON.stringify(reportMetaData);
     }
+
+    if(axeAssessedPagesJson === undefined) {
+        axeAssessedPagesJson = JSON.stringify(axeAssessedPages);
+    }
+
+    fs.copyFileSync(backupDataJsPath, originalDataJsPath);
 
     // Read the template data.js file
     await fs.readFile(dataJsFile, 'utf8', async (err, data) => {
@@ -26,8 +31,8 @@ const startServer = async () => {
 
         // Replace the placeholders with the actual data
         data = data
-            .replace('INJECT_REPORT_METADATA', JSON.stringify(reportMetaData))
-            .replace('INJECT_AXE_VIOLATIONS', JSON.stringify(axeAssessedPages));
+            .replace('INJECT_REPORT_METADATA', reportMetaDataJson)
+            .replace('INJECT_AXE_VIOLATIONS', axeAssessedPagesJson);
 
         // Write the updated content back to data.js
         await fs.writeFile(dataJsFile, data, 'utf8', (err) => {
@@ -40,6 +45,16 @@ const startServer = async () => {
     });
 }
 
+const startServer = async () => {
+    // Check if a backup of data.js exists, and if not, create one from the original
+    if (!fs.existsSync(backupDataJsPath)) {
+        fs.copyFileSync(originalDataJsPath, backupDataJsPath);
+
+        await injectJsonData(JSON.stringify(reportMetaData), JSON.stringify(axeAssessedPages))
+    }
+}
 startServer();
+
+module.exports = injectJsonData;
 
 

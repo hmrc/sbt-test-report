@@ -40,7 +40,6 @@ const injectJsonData = async (reportMetaDataJson, axeAssessedPagesJson) => {
                 console.error('Error writing data.js:', err);
                 return;
             }
-            console.log('data.js updated successfully.');
         });
     });
 }

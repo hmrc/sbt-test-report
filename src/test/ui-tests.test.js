@@ -25,6 +25,9 @@ describe('Accessibility Report', () => {
     });
 
     afterAll(async () => {
+        if(page) {
+            await resetData(page);
+        }
         await browser.close();
     })
 

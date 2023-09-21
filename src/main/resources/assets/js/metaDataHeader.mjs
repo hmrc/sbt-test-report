@@ -54,4 +54,4 @@ function metaDataHeader(parentElement, reportMetaData) {
     }
 }
 
-module.exports = metaDataHeader;
+module.exports = metaDataHeader; // TODO: need webpack to package assets for ES6

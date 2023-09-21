@@ -1,12 +1,12 @@
 async function init() {
-    const issues = [];
-
+    let groupedIssues = [];
     const {reportMetaData, axeAssessedPages} = reportData();
 
     // Init
     let initialSearchParams = new URLSearchParams(window.location.search);
 
     const search = document.getElementById("search");
+    const violationList = document.getElementById('violations');
     const reportMetaDataElement = document.getElementById('metaDataHeader');
 
     // Create page header with report metadata
@@ -28,61 +28,11 @@ async function init() {
         };
     }
 
-    const removeSearchFromUrlParams = () => {
-        const url = new URL(window.location);
-        let clearUrlParams = url.href;
-        if (url.search !== "") {
-            clearUrlParams = url.href.replace(url.search, '');
-        }
-        history.pushState({}, "", clearUrlParams);
-        return clearUrlParams;
-    }
-
-    const clearSearchFromUrl = () => {
-        window.location.href = removeSearchFromUrlParams();
-    }
-
     // Create and populate violations
-    const violationList = document.getElementById('violations');
-    const createViolations = () => {
-        const createViolationData = () => {
-            Array.from(axeAssessedPages).forEach(page => {
-                const testEngineVersion = page.testEngine.version;
-                Array.from(page.violations).forEach(violation => {
-                    const violationData = {
-                        id: violation.id,
-                        impact: violation.impact,
-                        version: testEngineVersion,
-                        help: violation.help,
-                        helpUrl: violation.helpUrl,
-                        html: Array.from(violation.nodes).map(node => node.html),
-                        affects: [page.url],
-                        testEngineVersion
-                    };
+    const createIssues = () => {
 
-                    const dataHash = MD5.generate(JSON.stringify(violationData));
-                    const hostUrl = removeSearchFromUrlParams();
-                    const permaLink = hostUrl + '?search=' + dataHash;
-                    violationData.dataHash = dataHash;
-                    violationData.permaLink = permaLink;
-
-                    const existingIssue = issues.find(issue => {
-                        return issue.id === violationData.id &&
-                            issue.html.join(' ') === violationData.html.join(' ');
-                    });
-
-                    if (existingIssue) {
-                        if (!existingIssue.affects.includes(page.url))
-                            existingIssue.affects.push(page.url);
-                    } else {
-                        issues.push(violationData);
-                    }
-                });
-            });
-        };
-
-        const createAndPopulateViolationElements = () => {
-            issues.forEach(issue => {
+        const populateIssues = (groupedIssues) => {
+            groupedIssues.forEach(issue => {
                 let temp = document.getElementsByTagName("template")[0];
                 let clonedTemplate = temp.content.cloneNode(true);
                 const li = clonedTemplate.querySelector('li');
@@ -147,11 +97,11 @@ async function init() {
             return array;
         }
 
-        createViolationData();
-        sortByImpact(issues);
-        createAndPopulateViolationElements();
+        groupedIssues = createGroupedIssues(axeAssessedPages, MD5, removeSearchFromUrlParams);
+        sortByImpact(groupedIssues);
+        populateIssues(groupedIssues);
     }
-    createViolations();
+    createIssues();
 
     // Issue count
     const issueCount = document.getElementById('issueCount');
@@ -167,7 +117,7 @@ async function init() {
         if (count === 0) {
             issueCount.innerText = "No issues identified.";
         } else {
-            issueCount.innerText = `Displaying ${count} of ${issues.length} issues identified.`;
+            issueCount.innerText = `Displaying ${count} of ${groupedIssues.length} issues identified.`;
         }
     }
 
@@ -198,7 +148,7 @@ async function init() {
 
         // Function to hide all violations
         const hideAllViolations = () => {
-            issues.forEach(issue => {
+            groupedIssues.forEach(issue => {
                 const dataHashFound = document.querySelector(`li[data-hash="${issue.dataHash}"]`);
                 if (dataHashFound) {
                     dataHashFound.classList.add('hidden');
@@ -267,7 +217,7 @@ async function init() {
     };
 
     const filterByViolationImpact = (onFilters) => {
-        issues.forEach(issue => {
+        groupedIssues.forEach(issue => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
             if (dataHashFound) {
                 Array.from(dataHashFound).forEach(elem => {
@@ -284,7 +234,7 @@ async function init() {
     }
 
     const showAllViolations = () => {
-        issues.forEach(issue => {
+        groupedIssues.forEach(issue => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
             if (dataHashFound) {
                 for (let i = 0; i < dataHashFound.length; ++i) {
@@ -310,7 +260,7 @@ async function init() {
         }
 
         if (name === "search") {
-            const foundIssue = issues.find(issue => issue.dataHash === valueFromUrl);
+            const foundIssue = groupedIssues.find(issue => issue.dataHash === valueFromUrl);
             if (foundIssue) {
                 const violationElem = document.querySelector(`li[data-hash="${foundIssue.dataHash}"]`);
                 if (violationElem) {

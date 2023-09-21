@@ -20,7 +20,7 @@ function addBuildSection(paragraph, jenkinsBuildId, jenkinsBuildUrl, testEnviron
         paragraph.innerHTML += "build ";
 
         const arefBuildUrl = document.createElement('a');
-        arefBuildUrl.href = jenkinsBuildUrl;
+        arefBuildUrl.href = jenkinsBuildUrl ? jenkinsBuildUrl : '#';
         arefBuildUrl.textContent = jenkinsBuildId;
 
         const spanBuildNumber = document.createElement('span');

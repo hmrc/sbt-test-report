@@ -132,15 +132,6 @@ async function init() {
         event.preventDefault();
     });
 
-    const minimumSearchLength = 1;
-    const searchTermNotValid = (term) => {
-        return term.trim().length < minimumSearchLength;
-    }
-
-    const searchTermValid = (term) => {
-        return term.trim().length >= minimumSearchLength;
-    }
-
     // Search
     const highlighter = new Mark(document.getElementById("violations"));
     const searchViolations = (onFilters) => {
@@ -158,7 +149,6 @@ async function init() {
 
         // Clear any previous highlighting
         highlighter.unmark();
-        if(searchTermNotValid(value)) return;
 
         // If the search input is empty, show all violations and exit
         if (value.trim() === "") {
@@ -304,13 +294,13 @@ async function init() {
         const onFilters = activeFilters(filters);
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
-            if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
+            if (searchValue && searchValue.value.trim() !== "") {
                 searchViolations(onFilters);
             } else {
                 filterByViolationImpact(onFilters);
             }
         } else {
-            if (searchValue && searchTermValid(searchValue.value) && searchValue.value.trim() !== "") {
+            if (searchValue && searchValue.value.trim() !== "") {
                 searchViolations();
             } else {
                 showAllViolations();

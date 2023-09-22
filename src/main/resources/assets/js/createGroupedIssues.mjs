@@ -7,7 +7,6 @@ function createGroupedIssues(pages, funcMD5, funcRemoveSearchFromUrlParams) {
             const violationData = {
                 id: violation.id,
                 impact: violation.impact,
-                version: testEngineVersion,
                 help: violation.help,
                 helpUrl: violation.helpUrl,
                 html: Array.from(violation.nodes).map(node => node.html),

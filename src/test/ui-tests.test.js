@@ -1,6 +1,8 @@
-const puppeteer = require('puppeteer');
-const {resetData, interceptReportMetaData, interceptAxeAssessedPages} = require('./intercept');
-const {describe, beforeEach, beforeAll, afterAll, expect, it} = require('@jest/globals');
+import {jest} from '@jest/globals'
+import {describe, beforeEach, beforeAll, afterAll, expect, it} from '@jest/globals';
+
+import puppeteer from 'puppeteer';
+import {resetData, interceptReportMetaData, interceptAxeAssessedPages} from './intercept.mjs';
 
 jest.setTimeout(20000);
 

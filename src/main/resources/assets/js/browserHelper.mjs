@@ -1,4 +1,4 @@
-function removeSearchFromUrlParams() {
+export function removeSearchFromUrlParams() {
     const url = new URL(window.location);
     let clearUrlParams = url.href;
     if (url.search !== "") {
@@ -8,11 +8,11 @@ function removeSearchFromUrlParams() {
     return clearUrlParams;
 }
 
-function clearSearchFromUrl() {
+export function clearSearchFromUrl() {
     window.location.href = removeSearchFromUrlParams();
 }
 
-function debounce(func, delay) {
+export function debounce(func, delay) {
     let timeoutId;
 
     return function () {
@@ -26,5 +26,3 @@ function debounce(func, delay) {
         }, delay);
     };
 }
-
-module.exports = {debounce, removeSearchFromUrlParams, clearSearchFromUrl};

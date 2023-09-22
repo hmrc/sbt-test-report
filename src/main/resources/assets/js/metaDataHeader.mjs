@@ -37,7 +37,7 @@ function addBuildSection(paragraph, jenkinsBuildId, jenkinsBuildUrl, testEnviron
     return paragraph;
 }
 
-function metaDataHeader(parentElement, reportMetaData) {
+export function metaDataHeader(parentElement, reportMetaData) {
     if (reportMetaData) {
         const paragraph = document.createElement('p');
         paragraph.innerHTML = "Generated from ";
@@ -53,5 +53,3 @@ function metaDataHeader(parentElement, reportMetaData) {
         parentElement.appendChild(paragraph);
     }
 }
-
-module.exports = metaDataHeader; // TODO: need webpack to package assets for ES6

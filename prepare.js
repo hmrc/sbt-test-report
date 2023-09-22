@@ -1,15 +1,23 @@
-const fs = require('fs');
-const path = require("path");
+import fs from 'fs';
+import path from 'path';
 
-const reportMetaData = require("./src/test/resources/report_meta_data.json");
-const axeAssessedPages = require("./src/test/resources/axe_results.json");
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
+const reportMetaData = require('./src/test/resources/report_meta_data.json');
+const axeAssessedPages = require('./src/test/resources/axe_results.json');
 
 const dataJsFile = __dirname + '/src/main/resources/assets/data.js';
 
 const originalDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js');
 const backupDataJsPath = path.join(__dirname, '/src/main/resources/assets/data.js.bak');
 
-const injectJsonData = async (reportMetaDataJson, axeAssessedPagesJson) => {
+export const injectJsonData = async (reportMetaDataJson, axeAssessedPagesJson) => {
     if(reportMetaDataJson === undefined) {
         reportMetaDataJson = JSON.stringify(reportMetaData);
     }
@@ -47,7 +55,5 @@ const prepareJsonData = async () => {
     }
 }
 prepareJsonData();
-
-module.exports = injectJsonData;
 
 

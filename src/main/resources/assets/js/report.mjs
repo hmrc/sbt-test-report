@@ -1,4 +1,8 @@
-async function init() {
+import {clearSearchFromUrl, debounce} from "./browserHelper.mjs";
+import {createGroupedIssues, sortByImpact} from "./issues.mjs";
+import {metaDataHeader} from "./metaDataHeader.mjs";
+
+export async function init() {
     let groupedIssues = [];
     const {reportMetaData, axeAssessedPages} = reportData();
 
@@ -60,7 +64,7 @@ async function init() {
             });
         }
 
-        groupedIssues = createGroupedIssues(axeAssessedPages, MD5, removeSearchFromUrlParams);
+        groupedIssues = createGroupedIssues(axeAssessedPages);
         sortByImpact(groupedIssues);
         populateIssues(groupedIssues);
     }
@@ -282,3 +286,5 @@ async function init() {
     // Visibility (based on JavaScript enabled/disabled in browser)
     document.getElementById("sidebar").classList.remove("js-hidden");
 }
+
+document.body.addEventListener("load", init(), false);

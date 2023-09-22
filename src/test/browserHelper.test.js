@@ -2,8 +2,12 @@
  * @jest-environment jsdom
  */
 
-const {test, describe, expect} = require('@jest/globals');
-const {debounce} = require("../main/resources/assets/js/browserHelper.mjs");
+import {jest} from '@jest/globals'
+import {test, describe, expect} from '@jest/globals';
+import {debounce} from '../main/resources/assets/js/browserHelper.mjs';
+
+// const {test, describe, expect} = require('@jest/globals');
+// const {debounce} = require("../main/resources/assets/js/browserHelper.mjs");
 
 describe('debounce', () => {
 

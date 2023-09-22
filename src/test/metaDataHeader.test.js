@@ -2,8 +2,10 @@
  * @jest-environment jsdom
  */
 
-const {test, describe, beforeEach, expect} = require('@jest/globals');
-const metaDataHeader = require("../main/resources/assets/js/metaDataHeader.mjs");
+import {jest} from '@jest/globals'
+import {test, describe, beforeEach, expect} from '@jest/globals';
+import {metaDataHeader} from '../main/resources/assets/js/metaDataHeader.mjs';
+
 let reportMetaDataElement;
 
 beforeEach(() => {

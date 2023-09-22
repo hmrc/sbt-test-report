@@ -6,7 +6,7 @@
     "start": "npm-run-all --sequential copy server",
     "copy": "node prepare.js",
     "server": "node server.js",
-    "test": "jest ./src/test --runInBand --detectOpenHandles",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js ./src/test --runInBand --detectOpenHandles",
     "pre-commit": ".husky/pre-commit",
     "prepare": "husky install"
   },
@@ -15,7 +15,10 @@
       "pre-commit": "npm run pre-commit"
     }
   },
+  "type": "module",
   "devDependencies": {
+    "@babel/preset-env": "^7.22.20",
+    "babel-jest": "^29.7.0",
     "husky": "^8.0.0",
     "jest": "^29.7.0",
     "lite-server": "^2.6.1",

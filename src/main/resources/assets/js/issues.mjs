@@ -1,4 +1,7 @@
-function createGroupedIssues(pages, funcMD5, funcRemoveSearchFromUrlParams) {
+import md5 from '../../assets/lib/md5.js';
+import {removeSearchFromUrlParams} from './browserHelper.mjs';
+
+export function createGroupedIssues(pages) {
     const issues = [];
 
     Array.from(pages).forEach(page => {
@@ -14,8 +17,8 @@ function createGroupedIssues(pages, funcMD5, funcRemoveSearchFromUrlParams) {
                 testEngineVersion
             };
 
-            const dataHash = funcMD5.generate(JSON.stringify(violationData));
-            const hostUrl = funcRemoveSearchFromUrlParams();
+            const dataHash = md5(JSON.stringify(violationData));
+            const hostUrl = removeSearchFromUrlParams();
             const permaLink = hostUrl + '?search=' + dataHash;
             violationData.dataHash = dataHash;
             violationData.permaLink = permaLink;
@@ -37,7 +40,7 @@ function createGroupedIssues(pages, funcMD5, funcRemoveSearchFromUrlParams) {
     return issues;
 }
 
-function sortByImpact(array) {
+export function sortByImpact(array) {
     const severityMap = {
         "critical": 0,
         "serious": 1,
@@ -53,5 +56,3 @@ function sortByImpact(array) {
 
     return array;
 }
-
-module.exports = {createGroupedIssues, sortByImpact};

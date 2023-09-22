@@ -37,4 +37,21 @@ function createGroupedIssues(pages, funcMD5, funcRemoveSearchFromUrlParams) {
     return issues;
 }
 
-module.exports = createGroupedIssues;
+function sortByImpact(array) {
+    const severityMap = {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 2,
+        "info": 3,
+    };
+
+    array.sort((a, b) => {
+        const aSeverity = severityMap[a.impact];
+        const bSeverity = severityMap[b.impact];
+        return aSeverity - bSeverity;
+    });
+
+    return array;
+}
+
+module.exports = {createGroupedIssues, sortByImpact};

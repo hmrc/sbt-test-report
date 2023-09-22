@@ -13,21 +13,6 @@ async function init() {
     reportMetaData.testEnvironment = axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent; // TODO: should be apart of the report meta data json
     metaDataHeader(reportMetaDataElement, reportMetaData);
 
-    const debounce = (func, delay) => {
-        let timeoutId;
-
-        return function () {
-            const context = this;
-            const args = arguments;
-
-            clearTimeout(timeoutId);
-
-            timeoutId = setTimeout(function () {
-                func.apply(context, args);
-            }, delay);
-        };
-    }
-
     // Create and populate violations
     const createIssues = () => {
 
@@ -73,28 +58,6 @@ async function init() {
 
                 violationList.appendChild(clonedTemplate);
             });
-        }
-
-        const sortByImpact = (array) => {
-            const severityMap = {
-                "critical": 0,
-                "serious": 1,
-                "moderate": 2,
-                "info": 3,
-            };
-
-            array.sort((a, b) => {
-                const aSeverity = severityMap[a.impact];
-                const bSeverity = severityMap[b.impact];
-
-                if (aSeverity !== bSeverity) {
-                    return aSeverity - bSeverity;
-                }
-
-                return a.impact - b.impact;
-            });
-
-            return array;
         }
 
         groupedIssues = createGroupedIssues(axeAssessedPages, MD5, removeSearchFromUrlParams);

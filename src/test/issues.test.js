@@ -3,7 +3,7 @@
  */
 
 const {test, describe, beforeEach, expect} = require('@jest/globals');
-const createGroupedIssues = require("../main/resources/assets/js/createGroupedIssues.mjs");
+const {createGroupedIssues, sortByImpact} = require("../main/resources/assets/js/issues.mjs");
 
 
 const MD5 = require('../main/resources/assets/lib/md5.min.js');
@@ -52,14 +52,28 @@ const moderateViolation2 = createViolation(
     'http://somehelpurl',
     sameHtml);
 
-const moderateViolation3 = createViolation(
+const criticalViolation3 = createViolation(
     'backlink',
     'critical',
     'All page content should be contained by landmarks',
     'http://somehelpurl',
     sameHtml);
 
-describe('with axe pages grouped by id, html and pageUrl', () => {
+const infoViolation4 = createViolation(
+    'href',
+    'info',
+    'Another info help description',
+    'http://somehelpurl',
+    sameHtml);
+
+const seriousViolation4 = createViolation(
+    'link',
+    'serious',
+    'A serious violation',
+    'http://somehelpurl',
+    sameHtml);
+
+describe('createGroupedIssues', () => {
     test('maps raw violations to an aggregate issue view model, with a permalink for each issue', () => {
         const axePage1 = createPage('http://axeresult-a', '4.7.2', [moderateViolation1]);
 
@@ -79,7 +93,7 @@ describe('with axe pages grouped by id, html and pageUrl', () => {
         }]);
     });
 
-    test('grouped when id and html are the same but pageUrl differs', () => {
+    test('groups violations when id and html are the same but pageUrl differs', () => {
         const axePage1 = createPage('http://axeresult-a', '4.7.2', [moderateViolation1]);
         const axePage2 = createPage('http://axeresult-b', '4.7.2', [moderateViolation2]);
 
@@ -89,7 +103,7 @@ describe('with axe pages grouped by id, html and pageUrl', () => {
         expect(groupedIssues[0].affects).toEqual(['http://axeresult-a', 'http://axeresult-b'])
     });
 
-    test('grouped when id, html and pageUrl are the same', () => {
+    test('groups violations when id, html and pageUrl are the same', () => {
         const axePage1 = createPage('http://axeresult-a', '4.7.2', [moderateViolation1]);
         const axePage2 = createPage('http://axeresult-a', '4.7.2', [moderateViolation2]);
 
@@ -99,9 +113,9 @@ describe('with axe pages grouped by id, html and pageUrl', () => {
         expect(groupedIssues[0].affects).toEqual(['http://axeresult-a'])
     });
 
-    test('not grouped when id and html differ', () => {
+    test('does not group when id and html differ', () => {
         const axePage1 = createPage('http://axeresult-a', '4.7.2', [moderateViolation1]);
-        const axePage2 = createPage('http://axeresult-b', '4.7.2', [moderateViolation3]);
+        const axePage2 = createPage('http://axeresult-b', '4.7.2', [criticalViolation3]);
 
         const groupedIssues = createGroupedIssues([axePage1, axePage2], MD5, removeSearchFromUrlParams);
 
@@ -109,4 +123,19 @@ describe('with axe pages grouped by id, html and pageUrl', () => {
         expect(groupedIssues[0].affects).toEqual(['http://axeresult-a']);
         expect(groupedIssues[1].affects).toEqual(['http://axeresult-b']);
     });
+});
+
+describe('Sort by impact', () => {
+    test('Sort issues in order: critical > serious > moderate > info', () => {
+        const moderateAxePage   = createPage('http://axeresult-a', '4.7.2', [moderateViolation1]);
+        const criticalAxePage   = createPage('http://axeresult-b', '4.7.2', [criticalViolation3]);
+        const infoAxePage       = createPage('http://axeresult-b', '4.7.2', [infoViolation4]);
+        const seriousAxePage    = createPage('http://axeresult-b', '4.7.2', [seriousViolation4]);
+
+        const groupedIssues = createGroupedIssues([moderateAxePage, criticalAxePage, infoAxePage, seriousAxePage], MD5, removeSearchFromUrlParams);
+        sortByImpact(groupedIssues);
+        const impacts = groupedIssues.map(issue => issue.impact);
+
+        expect(impacts).toEqual(['critical','serious','moderate','info'])
+    })
 });

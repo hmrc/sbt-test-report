@@ -1,74 +1,43 @@
-import {clearSearchFromUrl, debounce} from "./browserHelper.mjs";
-import {createGroupedIssues, sortByImpact} from "./issues.mjs";
+import {populateTemplate} from "./template.mjs";
 import {metaDataHeader} from "./metaDataHeader.mjs";
+import {createGroupedIssues, sortByImpact} from "./issues.mjs";
+import {clearSearchFromUrl, debounce} from "./browserHelper.mjs";
 
-export async function init() {
-    let groupedIssues = [];
+export function init() {
     const {reportMetaData, axeAssessedPages} = reportData();
-
-    // Init
-    let initialSearchParams = new URLSearchParams(window.location.search);
-
+    const form = document.getElementById("form");
     const search = document.getElementById("search");
+    const initialSearchParams = new URLSearchParams(window.location.search);
     const violationList = document.getElementById('violations');
+    const highlighter = new Mark(violationList);
     const reportMetaDataElement = document.getElementById('metaDataHeader');
+    const template = document.getElementsByTagName("template")[0];
+
+    // Visibility (based on JavaScript enabled/disabled in browser)
+    document.getElementById("sidebar").classList.remove("js-hidden");
+
+    // Prevent default form behaviours
+    form.addEventListener('keypress', function (e) {
+        if (e.code === 'Enter') {
+            e.preventDefault();
+        }
+    });
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+    });
 
     // Create page header with report metadata
-    reportMetaData.testEnvironment = axeAssessedPages && axeAssessedPages.length > 0 && axeAssessedPages[0].testEnvironment.userAgent; // TODO: should be apart of the report meta data json
+    reportMetaData.testEnvironment =
+        axeAssessedPages && axeAssessedPages.length > 0 &&
+        axeAssessedPages[0].testEnvironment.userAgent; // TODO: should be apart of the report meta data json
     metaDataHeader(reportMetaDataElement, reportMetaData);
 
-    // Create and populate violations
-    const createIssues = () => {
-
-        const populateIssues = (groupedIssues) => {
-            groupedIssues.forEach(issue => {
-                let temp = document.getElementsByTagName("template")[0];
-                let clonedTemplate = temp.content.cloneNode(true);
-                const li = clonedTemplate.querySelector('li');
-
-                li.setAttribute('data-hash', issue.dataHash);
-                li.setAttribute('data-impact', issue.impact);
-
-                const helpUrl = clonedTemplate.getElementById('helpUrl');
-                helpUrl.setAttribute('href', issue.helpUrl);
-                helpUrl.innerText = issue.id;
-
-                const impactTag = clonedTemplate.getElementById('impactTag');
-                impactTag.setAttribute('data-tag', issue.impact);
-                impactTag.innerText = issue.impact;
-
-                const testEngine = clonedTemplate.getElementById('testEngineVersion');
-                testEngine.innerText = issue.testEngineVersion;
-
-                const violationHelp = clonedTemplate.getElementById('violationHelp');
-                violationHelp.innerText = issue.help;
-
-                const htmlSnippet = clonedTemplate.getElementById('htmlSnippet');
-                htmlSnippet.innerText = issue.html;
-
-                const urlViolationSummary = clonedTemplate.getElementById('urlViolationSummary');
-                const affectsUrls = issue.affects;
-                urlViolationSummary.innerText = `${affectsUrls.length} URLs`;
-                const urlViolations = clonedTemplate.getElementById('urlViolations');
-                affectsUrls.forEach(url => {
-                    const urlListItem = document.createElement('li');
-                    urlListItem.innerText = url;
-                    urlViolations.append(urlListItem);
-                });
-
-                const violationPermaLink = clonedTemplate.getElementById('violationPermaLink');
-                violationPermaLink.setAttribute('href', issue.permaLink);
-                violationPermaLink.innerText = issue.permaLink;
-
-                violationList.appendChild(clonedTemplate);
-            });
-        }
-
-        groupedIssues = createGroupedIssues(axeAssessedPages);
-        sortByImpact(groupedIssues);
-        populateIssues(groupedIssues);
-    }
-    createIssues();
+    // Create and populate issues
+    const groupedIssues = createGroupedIssues(axeAssessedPages);
+    sortByImpact(groupedIssues).forEach(issue => {
+        const clonedTemplate = populateTemplate(template, issue)
+        violationList.appendChild(clonedTemplate);
+    });
 
     // Issue count
     const issueCount = document.getElementById('issueCount');
@@ -82,25 +51,13 @@ export async function init() {
             }, 0);
 
         if (count === 0) {
-            issueCount.innerText = "No issues identified.";
+            issueCount.textContent = "No issues identified.";
         } else {
-            issueCount.innerText = `Displaying ${count} of ${groupedIssues.length} issues identified.`;
+            issueCount.textContent = `Displaying ${count} of ${groupedIssues.length} issues identified.`;
         }
     }
 
-    // Form
-    const form = document.getElementById("form");
-    form.addEventListener('keypress', function (e) {
-        if (e.code === 'Enter') {
-            e.preventDefault();
-        }
-    });
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-    });
-
     // Search
-    const highlighter = new Mark(document.getElementById("violations"));
     const searchViolations = (onFilters) => {
         const value = search.value;
 
@@ -280,11 +237,7 @@ export async function init() {
     filters.forEach((filter) => {
         filter.addEventListener("input", applyFilters);
     });
-
     displayIssueCount();
-
-    // Visibility (based on JavaScript enabled/disabled in browser)
-    document.getElementById("sidebar").classList.remove("js-hidden");
 }
 
 document.body.addEventListener("load", init(), false);

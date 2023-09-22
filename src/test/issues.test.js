@@ -2,8 +2,13 @@
  * @jest-environment jsdom
  */
 
-import {test, describe, expect} from '@jest/globals';
+import {jest, test, describe, expect} from '@jest/globals';
 import {createGroupedIssues, sortByImpact} from '../main/resources/assets/js/issues.mjs';
+
+// import md5 from '../main/resources/assets/lib/md5.js';
+// jest.mock('../main/resources/assets/lib/md5.js', () => {
+//     return jest.fn().mockReturnValue('thisisamdghash');
+// });
 
 const createViolation = (id, impact, help, helpUrl, html) => {
     return {

@@ -11,7 +11,6 @@ export function init() {
     const initialSearchParams = new URLSearchParams(window.location.search);
     const violationList = document.getElementById('violations');
     const highlighter = new Mark(violationList);
-    const issueCount = document.getElementById('issueCount');
     const filters = document.querySelectorAll("input[name='impact']");
     const template = document.getElementsByTagName("template")[0];
     const reportMetaDataElement = document.getElementById('metaDataHeader');
@@ -44,18 +43,18 @@ export function init() {
 
     // Issue count
     const displayIssueCount = () => {
-        const displayedViolations = document.querySelectorAll(`li[data-hash]`);
+        const issueCount = document.getElementById('issueCount');
 
-        const count = Array.from(displayedViolations)
-            .map(liViolation => liViolation.classList.contains('hidden') ? 0 : 1)
-            .reduce((accumulator, currentValue) => {
-                return accumulator + currentValue
-            }, 0);
+        const allIssues = Array.from(document.querySelectorAll(`li[data-impact]`));
 
-        if (count === 0) {
+        const visibleIssuesCount = allIssues
+            .filter(liViolation => !liViolation.classList.contains('hidden'))
+            .length;
+
+        if (visibleIssuesCount === 0) {
             issueCount.textContent = "No issues identified.";
         } else {
-            issueCount.textContent = `Displaying ${count} of ${groupedIssues.length} issues identified.`;
+            issueCount.textContent = `Displaying ${visibleIssuesCount} of ${allIssues.length} issues identified.`;
         }
     }
 

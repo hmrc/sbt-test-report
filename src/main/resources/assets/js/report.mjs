@@ -6,12 +6,15 @@ import {clearSearchFromUrl, debounce} from "./browserHelper.mjs";
 export function init() {
     const {reportMetaData, axeAssessedPages} = reportData();
     const form = document.getElementById("form");
+    const clear = document.getElementById("clear");
     const search = document.getElementById("search");
     const initialSearchParams = new URLSearchParams(window.location.search);
     const violationList = document.getElementById('violations');
     const highlighter = new Mark(violationList);
-    const reportMetaDataElement = document.getElementById('metaDataHeader');
+    const issueCount = document.getElementById('issueCount');
+    const filters = document.querySelectorAll("input[name='impact']");
     const template = document.getElementsByTagName("template")[0];
+    const reportMetaDataElement = document.getElementById('metaDataHeader');
 
     // Visibility (based on JavaScript enabled/disabled in browser)
     document.getElementById("sidebar").classList.remove("js-hidden");
@@ -40,7 +43,6 @@ export function init() {
     });
 
     // Issue count
-    const issueCount = document.getElementById('issueCount');
     const displayIssueCount = () => {
         const displayedViolations = document.querySelectorAll(`li[data-hash]`);
 
@@ -130,23 +132,6 @@ export function init() {
         displayIssueCount();
     };
 
-    const filterByViolationImpact = (onFilters) => {
-        groupedIssues.forEach(issue => {
-            const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
-            if (dataHashFound) {
-                Array.from(dataHashFound).forEach(elem => {
-                    const elemDataImpact = elem.getAttribute('data-impact');
-                    if (onFilters.includes(elemDataImpact)) {
-                        elem.classList.remove('hidden');
-                    } else {
-                        elem.classList.add('hidden');
-                    }
-                })
-            }
-        });
-        displayIssueCount();
-    }
-
     const showAllViolations = () => {
         groupedIssues.forEach(issue => {
             const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
@@ -159,33 +144,6 @@ export function init() {
         displayIssueCount();
     }
 
-    // URL query parameters
-    initialSearchParams.forEach((valueFromUrl, name) => {
-        const fields = document.querySelectorAll(`[name='${name}']`);
-
-        if (fields[0].type === "checkbox") {
-            Array.from(fields).forEach((field) => {
-                if (field.value === valueFromUrl) {
-                    field.checked = true;
-                }
-            });
-        } else {
-            fields[0].value = valueFromUrl;
-        }
-
-        if (name === "search") {
-            const foundIssue = groupedIssues.find(issue => issue.dataHash === valueFromUrl);
-            if (foundIssue) {
-                const violationElem = document.querySelector(`li[data-hash="${foundIssue.dataHash}"]`);
-                if (violationElem) {
-                    const elemDataImpact = violationElem.getAttribute('data-impact');
-                    search.value = foundIssue.dataHash;
-                    searchViolations([elemDataImpact]);
-                }
-            }
-        }
-    });
-
     const debounceSearch = debounce(searchViolations, 500);
     search.addEventListener("keyup", (e) => {
         // Clear any previous highlighting
@@ -197,13 +155,6 @@ export function init() {
         } else {
             debounceSearch();
         }
-    });
-
-    const clear = document.getElementById("clear");
-    clear.addEventListener("click", () => {
-        search.value = "";
-        filters.forEach((filter) => (filter.checked = false));
-        clearSearchFromUrl();
     });
 
     // Filters
@@ -232,11 +183,50 @@ export function init() {
         }
     }
 
-    // Impact toggles
-    const filters = document.querySelectorAll("input[name='impact']");
+    const filterByViolationImpact = (onFilters) => {
+        groupedIssues.forEach(issue => {
+            const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
+            if (dataHashFound) {
+                Array.from(dataHashFound).forEach(elem => {
+                    const elemDataImpact = elem.getAttribute('data-impact');
+                    if (onFilters.includes(elemDataImpact)) {
+                        elem.classList.remove('hidden');
+                    } else {
+                        elem.classList.add('hidden');
+                    }
+                })
+            }
+        });
+        displayIssueCount();
+    }
+
     filters.forEach((filter) => {
         filter.addEventListener("input", applyFilters);
     });
+
+    // Clear search and filters
+    clear.addEventListener("click", () => {
+        search.value = "";
+        filters.forEach((filter) => (filter.checked = false));
+        clearSearchFromUrl();
+    });
+
+    // URL query parameters
+    initialSearchParams.forEach((valueFromUrl, name) => {
+        if (name === "search") {
+            const foundIssue = groupedIssues.find(issue => issue.dataHash === valueFromUrl);
+            if (foundIssue) {
+                const violationElem = document.querySelector(`li[data-hash="${foundIssue.dataHash}"]`);
+                if (violationElem) {
+                    const elemDataImpact = violationElem.getAttribute('data-impact');
+                    search.value = foundIssue.dataHash;
+                    searchViolations([elemDataImpact]);
+                }
+            }
+        }
+    });
+
+    // Update count on page load
     displayIssueCount();
 }
 

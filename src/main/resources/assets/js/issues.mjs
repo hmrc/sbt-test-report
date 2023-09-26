@@ -1,5 +1,4 @@
 import md5 from '../../assets/lib/md5.js';
-import {removeSearchFromUrlParams} from './browserHelper.mjs';
 
 export function createGroupedIssues(pages) {
     const issues = [];
@@ -18,8 +17,7 @@ export function createGroupedIssues(pages) {
             };
 
             const dataHash = md5(JSON.stringify(violationData));
-            const hostUrl = removeSearchFromUrlParams();
-            const permaLink = hostUrl + '?search=' + dataHash;
+            const permaLink = window.location.origin + '?search=' + dataHash;
             violationData.dataHash = dataHash;
             violationData.permaLink = permaLink;
 

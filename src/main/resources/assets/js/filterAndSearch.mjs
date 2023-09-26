@@ -144,7 +144,7 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
         // Clear any previous highlighting
         highlighter.unmark();
 
-        const onFilters = activeFilters(filters);
+        const onFilters = activeFilters(filters); // TODO: add active filters to url parameter
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
             if (searchValue && searchValue.value.trim() !== "") {
@@ -193,19 +193,10 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
 
     // URL query parameters
     const initialSearchParams = new URLSearchParams(window.location.search);
-    console.log(Array.from(initialSearchParams).length);
     initialSearchParams.forEach((valueFromUrl, name) => {
         if (name === "search") {
-            console.log(valueFromUrl);
-            const foundIssue = groupedIssues.find(issue => issue.dataHash === valueFromUrl);
-            if (foundIssue) {
-                const violationElem = document.querySelector(`li[data-hash="${foundIssue.dataHash}"]`);
-                if (violationElem) {
-                    const elemDataImpact = violationElem.getAttribute('data-impact');
-                    search.value = foundIssue.dataHash;
-                    searchViolations([elemDataImpact]);
-                }
-            }
+            search.value = valueFromUrl;
+            searchViolations(activeFilters(filters)); // TODO: active filters are not stored on the url as parameters so they will not be included
         }
     });
 

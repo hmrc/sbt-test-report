@@ -85,7 +85,7 @@ describe('createGroupedIssues', () => {
             html: ['<a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>'],
             affects: ['http://axeresult-a'],
             testEngineVersion: '4.7.2',
-            permaLink: 'http://localhost/?search=eb3026fa95fda35bce525495de908954'
+            permaLink: 'http://localhost?search=eb3026fa95fda35bce525495de908954'
         }]);
     });
 

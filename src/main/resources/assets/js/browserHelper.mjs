@@ -1,6 +1,7 @@
 export function updateUrlParam(url, key, value) {
     if (url) {
-        if (value && value !== '') url.searchParams.set(key, value);
+        if (value) url.searchParams.set(key, value);
+        else if(value === undefined || value === '') url.searchParams.delete(key);
         history.pushState({}, "", url.href);
     }
 }

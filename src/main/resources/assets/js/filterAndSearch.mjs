@@ -35,20 +35,17 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
     }
 
     // Search
-    const search = document.getElementById("search");
     const highlighter = new Mark(violationList);
-
+    const search = document.getElementById("search");
     const searchViolations = (onFilters) => {
         const value = search.value;
 
         // Function to hide all violations
         const hideAllViolations = () => {
-            groupedIssues.forEach(issue => {
-                const dataHashFound = document.querySelector(`li[data-hash="${issue.dataHash}"]`);
-                if (dataHashFound) {
-                    dataHashFound.classList.add('hidden');
-                }
-            });
+            const listIssues = document.querySelectorAll('li[data-hash]');
+            if (listIssues) {
+                listIssues.forEach(issue => issue.classList.add('hidden'));
+            }
         };
 
         // Clear any previous highlighting
@@ -124,7 +121,7 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
                 }
             }
         });
-        updateUrlParam(url, 'search', '');
+        updateUrlParam(url, 'search');
         updateVisibleIssuesCount();
     }
 

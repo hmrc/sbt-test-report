@@ -168,5 +168,31 @@ describe('updateUrlParams', () => {
         // Ensure that history.pushState was called with the correct arguments
         expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/?filters=critical%2Cserious');
     });
+
+    test('should delete "filter" URL parameter when value is empty', () => {
+        const url = new URL('http://example.com/?filters=critical');
+        jest.spyOn(url.searchParams, 'delete');
+
+        updateUrlParam(url, 'filters', '');
+
+        // Ensure that searchParams.set was called
+        expect(url.searchParams.delete).toHaveBeenCalledWith('filters');
+
+        // Ensure that history.pushState was called with the correct arguments
+        expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/');
+    });
+
+    test('should delete "filter" URL parameter when value is undefined', () => {
+        const url = new URL('http://example.com/?filters=critical');
+        jest.spyOn(url.searchParams, 'delete');
+
+        updateUrlParam(url, 'filters');
+
+        // Ensure that searchParams.set was called
+        expect(url.searchParams.delete).toHaveBeenCalledWith('filters');
+
+        // Ensure that history.pushState was called with the correct arguments
+        expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/');
+    });
 });
 

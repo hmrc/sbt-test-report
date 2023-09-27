@@ -162,20 +162,18 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
     }
 
     const filterByViolationImpact = (onFilters) => {
-        groupedIssues.forEach(issue => {
-            // TODO could just drive off li[data-impact] instead of groupedIssues?
-            const dataHashFound = document.querySelectorAll(`li[data-hash="${issue.dataHash}"]`);
-            if (dataHashFound) {
-                Array.from(dataHashFound).forEach(elem => {
-                    const elemDataImpact = elem.getAttribute('data-impact');
-                    if (onFilters.includes(elemDataImpact)) {
-                        elem.classList.remove('hidden');
-                    } else {
-                        elem.classList.add('hidden');
-                    }
-                })
-            }
-        });
+        const listIssues = document.querySelectorAll('li[data-hash]');
+        if (listIssues) {
+            Array.from(listIssues).forEach(elem => {
+                const elemDataImpact = elem.getAttribute('data-impact');
+                if (onFilters.includes(elemDataImpact)) {
+                    elem.classList.remove('hidden');
+                } else {
+                    elem.classList.add('hidden');
+                }
+            })
+        }
+
         updateVisibleIssuesCount();
     }
 

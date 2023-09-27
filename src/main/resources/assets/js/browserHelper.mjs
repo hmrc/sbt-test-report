@@ -8,6 +8,13 @@ export function removeSearchFromUrlParams() {
     return clearUrlParams;
 }
 
+export function updateUrlParam(url, key, value) {
+    if(url) {
+        url.searchParams.set(key, value);
+        history.pushState({}, "", url.href);
+    }
+}
+
 export function clearSearchFromUrl() {
     window.location.href = removeSearchFromUrlParams();
 }

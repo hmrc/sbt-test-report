@@ -1,6 +1,8 @@
-import {clearSearchFromUrl, debounce} from "./browserHelper.mjs";
+import {clearSearchFromUrl, debounce, updateUrlParam} from "./browserHelper.mjs";
 
 export function initialiseFilterAndSearch(violationList, groupedIssues) {
+    const url = new URL(window.location.href);
+
     // Visibility (based on JavaScript enabled/disabled in browser)
     document.getElementById("sidebar").classList.remove("js-hidden");
 
@@ -54,10 +56,15 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
 
         // If the search input is empty, show all violations and exit
         if (value.trim() === "") {
+            updateUrlParam(url, 'search', '');
+
             applyFilters();
             updateVisibleIssuesCount();
             return;
         }
+
+        // update url param
+        updateUrlParam(url, 'search', value);
 
         // Hide all violations initially
         hideAllViolations();
@@ -117,6 +124,7 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
                 }
             }
         });
+        updateUrlParam(url, 'search', '');
         updateVisibleIssuesCount();
     }
 
@@ -144,7 +152,9 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
         // Clear any previous highlighting
         highlighter.unmark();
 
-        const onFilters = activeFilters(filters); // TODO: add active filters to url parameter
+        const onFilters = activeFilters(filters);
+        updateUrlParam(url, 'filters', onFilters.map(f => f).join(','));
+
         const searchValue = document.getElementById('search');
         if (onFilters.length > 0) {
             if (searchValue && searchValue.value.trim() !== "") {
@@ -190,15 +200,28 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
     });
 
     // URL query parameters
-    const initialSearchParams = new URLSearchParams(window.location.search);
-    initialSearchParams.forEach((valueFromUrl, name) => {
-        if (name === "search") {
-            search.value = valueFromUrl;
-            searchViolations(activeFilters(filters)); // TODO: active filters are not stored on the url as parameters so they will not be included
-        }
-    });
+    const checkAndApplyUrlParameters = () => {
+        url.searchParams.forEach((valueFromUrl, name) => {
+            if (name === "search") {
+                search.value = valueFromUrl;
+            } else
+            if(name === 'filters') {
+                const filters = url.searchParams.get('filters');
+                if(filters && filters !== '') {
+                    const selectedFilters = filters.split(',');
+                    selectedFilters.forEach(f => {
+                        const filter = document.getElementById(`impact-${f}`);
+                        if(filter) {
+                            filter.checked = true;
+                        }
+                    })
+                }
+            }
+        });
+        applyFilters();
+    }
+    checkAndApplyUrlParameters();
 
     // Update count on page load
     updateVisibleIssuesCount();
-
 }

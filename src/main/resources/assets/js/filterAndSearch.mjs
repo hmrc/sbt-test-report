@@ -1,4 +1,4 @@
-import {clearSearchFromUrl, debounce, updateUrlParam} from "./browserHelper.mjs";
+import {clearUrlParams, debounce, updateUrlParam} from "./browserHelper.mjs";
 
 export function initialiseFilterAndSearch(violationList, groupedIssues) {
     const url = new URL(window.location.href);
@@ -196,7 +196,7 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
     clear.addEventListener("click", () => {
         search.value = "";
         filters.forEach((filter) => (filter.checked = false));
-        clearSearchFromUrl();
+        clearUrlParams(url);
     });
 
     // URL query parameters

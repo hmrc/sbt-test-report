@@ -1,22 +1,16 @@
-export function removeSearchFromUrlParams() {
-    const url = new URL(window.location);
-    let clearUrlParams = url.href;
-    if (url.search !== "") {
-        clearUrlParams = url.href.replace(url.search, '');
-    }
-    history.pushState({}, "", clearUrlParams);
-    return clearUrlParams;
-}
-
 export function updateUrlParam(url, key, value) {
-    if(url) {
-        url.searchParams.set(key, value);
+    if (url) {
+        if (value && value !== '') url.searchParams.set(key, value);
         history.pushState({}, "", url.href);
     }
 }
 
-export function clearSearchFromUrl() {
-    window.location.href = removeSearchFromUrlParams();
+export function clearUrlParams(url) {
+    if (url.searchParams.has('filters')) url.searchParams.delete('filters');
+    if (url.searchParams.has('search')) url.searchParams.delete('search');
+
+    history.pushState({}, "", url.href);
+    window.location.reload();
 }
 
 export function debounce(func, delay) {

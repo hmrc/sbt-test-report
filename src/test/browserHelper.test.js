@@ -2,11 +2,8 @@
  * @jest-environment jsdom
  */
 
-import {jest, test, describe, expect} from '@jest/globals';
-import {debounce} from '../main/resources/assets/js/browserHelper.mjs';
-
-// const {test, describe, expect} = require('@jest/globals');
-// const {debounce} = require("../main/resources/assets/js/browserHelper.mjs");
+import {jest, test, describe, expect, beforeEach, afterEach} from '@jest/globals';
+import {clearUrlParams, debounce, updateUrlParam} from '../main/resources/assets/js/browserHelper.mjs';
 
 describe('debounce', () => {
 
@@ -67,3 +64,109 @@ describe('debounce', () => {
         expect(mockFunction).toHaveBeenCalledWith(42, 'test');
     });
 });
+
+describe('clearUrlParams', () => {
+
+    beforeEach(() => {
+        window = Object.create(window);
+        window.testCtx = {
+            /**
+             * Allows for setting `window.location` props within tests
+             * @param {String} prop - The `location` prop you want to set.
+             * @param {String} val - The value of the prop.
+             */
+            location: function(prop, val){
+                Object.defineProperty(window, 'location', {
+                    value: {
+                        reload: jest.fn()
+                    },
+                    writable: true
+                });
+            }
+        };
+
+        // mock out pushState to avoid SecurityError's
+        jest.spyOn(window.history, 'pushState');
+        window.history.pushState.mockImplementation((state, title, url) => {
+            window.testCtx.location('href', url);
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        window.history.pushState.mockRestore()
+    });
+
+    test('should remove "filters" and "search" parameters from the URL', () => {
+        const url = new URL('http://example.com/?filters=1&search=test');
+        jest.spyOn(url.searchParams, 'delete');
+
+        clearUrlParams(url);
+
+        // Ensure that searchParams.delete was called for both parameters
+        expect(url.searchParams.delete).toHaveBeenCalledWith('filters');
+        expect(url.searchParams.delete).toHaveBeenCalledWith('search');
+
+        // Ensure that history.pushState was called with the correct arguments
+        expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/');
+
+        // Ensure that window.location.reload was called
+        expect(window.location.reload).toHaveBeenCalled();
+    });
+
+    test('should not remove parameters if they do not exist in the URL', () => {
+        const url = new URL('http://example.com/?some=other');
+        jest.spyOn(url.searchParams, 'delete');
+
+        clearUrlParams(url);
+
+        // Ensure that searchParams.delete was not called since there are no matching parameters
+        expect(url.searchParams.delete).not.toHaveBeenCalled();
+
+        // Ensure that history.pushState was called with the correct arguments
+        expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/?some=other');
+
+        // Ensure that window.location.reload was called
+        expect(window.location.reload).toHaveBeenCalled();
+    });
+});
+
+describe('updateUrlParams', () => {
+    beforeEach(() => {
+        // mock out pushState to avoid SecurityError's
+        jest.spyOn(window.history, 'pushState');
+        window.history.pushState.mockImplementation((state, title, url) => {});
+    });
+
+    afterEach(() => {
+        window.history.pushState.mockRestore()
+        jest.clearAllMocks();
+    });
+
+    test('should add "filter" URL parameter with new values', () => {
+        const url = new URL('http://example.com/');
+        jest.spyOn(url.searchParams, 'set');
+
+        updateUrlParam(url, 'filters', 'critical');
+
+        // Ensure that searchParams.set was called
+        expect(url.searchParams.set).toHaveBeenCalledWith('filters', 'critical');
+
+        // Ensure that history.pushState was called with the correct arguments
+        expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/?filters=critical');
+    });
+
+    test('should update "filter" URL parameter with new values', () => {
+        const url = new URL('http://example.com/?filters=critical');
+        jest.spyOn(url.searchParams, 'set');
+
+        updateUrlParam(url, 'filters', 'critical,serious');
+
+        // Ensure that searchParams.set was called
+        expect(url.searchParams.set).toHaveBeenCalledWith('filters', 'critical,serious');
+
+        // Ensure that history.pushState was called with the correct arguments
+        expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/?filters=critical%2Cserious');
+    });
+});
+

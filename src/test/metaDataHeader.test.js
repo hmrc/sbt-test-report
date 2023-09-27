@@ -2,8 +2,7 @@
  * @jest-environment jsdom
  */
 
-import {jest} from '@jest/globals'
-import {test, describe, beforeEach, expect} from '@jest/globals';
+import {jest, test, describe, beforeEach, expect} from '@jest/globals';
 import {metaDataHeader} from '../main/resources/assets/js/metaDataHeader.mjs';
 
 let reportMetaDataElement;

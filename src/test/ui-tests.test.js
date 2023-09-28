@@ -155,6 +155,7 @@ describe('Accessibility Report', () => {
             await page.$eval('#search', el => el.value = '');
             await page.focus('#search');
             await page.keyboard.press('Backspace');
+            await page.waitForTimeout(pageRefreshDelay);
 
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations).toEqual(['moderate']);

@@ -37,79 +37,42 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
     // Search
     const highlighter = new Mark(violationList);
     const search = document.getElementById("search");
-    const searchViolations = (onFilters) => {
-        const value = search.value;
 
-        // Function to hide all violations
-        const hideAllViolations = () => {
-            const listIssues = document.querySelectorAll('li[data-hash]');
-            if (listIssues) {
-                listIssues.forEach(issue => issue.classList.add('hidden'));
+    const onSearchTermMatch = (element, onFilters) => {
+        const dataHashFound = element.closest("li[data-hash]");
+        if (dataHashFound) {
+            const elemDataImpact = dataHashFound.getAttribute('data-impact');
+            if (onFilters && onFilters.length > 0) {
+                if (onFilters.includes(elemDataImpact)) {
+                    dataHashFound.classList.remove('hidden');
+                }
+            } else {
+                setTimeout(() => {
+                    dataHashFound.classList.remove('hidden');
+                    updateVisibleIssuesCount();
+                }, 250);
             }
-        };
 
-        // Clear any previous highlighting
-        highlighter.unmark();
-
-        // If the search input is empty, show all violations and exit
-        if (value.trim() === "") {
-            updateUrlParam(url, 'search', '');
-
-            applyFilters();
-            updateVisibleIssuesCount();
-            return;
-        }
-
-        // update url param
-        updateUrlParam(url, 'search', value);
-
-        // Hide all violations initially
-        hideAllViolations();
-
-        // Perform highlighting and filtering based on the search value
-        highlighter.mark(value, {
-            element: "span",
-            className: "highlight",
-            accuracy: "partially",
-            acrossElements: true,
-            each: (e) => { // TODO named function?
-                const dataHashFound = e.closest("li[data-hash]");
-                if (dataHashFound) {
-                    const elemDataImpact = dataHashFound.getAttribute('data-impact');
-                    if (onFilters && onFilters.length > 0) {
-                        if (onFilters.includes(elemDataImpact)) {
-                            dataHashFound.classList.remove('hidden');
-                        }
-                    } else {
-                        setTimeout(() => {
-                            dataHashFound.classList.remove('hidden');
-                            updateVisibleIssuesCount();
-                        }, 250);
-                    }
-
-                    // check for affects links and expand
-                    const elemDataHash = dataHashFound.getAttribute('data-hash');
-                    const elemListItem = document.querySelector(`li[data-hash="${elemDataHash}"]`);
-                    if (elemListItem) {
-                        const affectsLink = elemListItem.querySelector('#urlViolations');
-                        if (affectsLink) {
-                            const affectsDetails = affectsLink.closest('details');
-                            if (affectsDetails) {
-                                affectsDetails.setAttribute('open', '');
-                            }
-                        }
+            // check for affects links and expand
+            const elemDataHash = dataHashFound.getAttribute('data-hash');
+            const elemListItem = document.querySelector(`li[data-hash="${elemDataHash}"]`);
+            if (elemListItem) {
+                const affectsLink = elemListItem.querySelector('#urlViolations');
+                if (affectsLink) {
+                    const affectsDetails = affectsLink.closest('details');
+                    if (affectsDetails) {
+                        affectsDetails.setAttribute('open', '');
                     }
                 }
-            },
-            exclude: [
-                "dt"
-            ],
-            noMatch: () => {
-                hideAllViolations();
             }
-        });
+        }
+    }
 
-        updateVisibleIssuesCount();
+    const hideAllViolations = () => {
+        const listIssues = document.querySelectorAll('li[data-hash]');
+        if (listIssues) {
+            listIssues.forEach(issue => issue.classList.add('hidden'));
+        }
     };
 
     const showAllViolations = () => {
@@ -124,6 +87,39 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
         updateUrlParam(url, 'search');
         updateVisibleIssuesCount();
     }
+
+    const searchViolations = (onFilters) => {
+        const value = search.value;
+
+        // Clear any previous highlighting
+        highlighter.unmark();
+
+        // If the search input is empty, show all violations and exit
+        if (value.trim() === "") {
+            applyFilters();
+            updateUrlParam(url, 'search');
+            updateVisibleIssuesCount();
+            return;
+        }
+
+        // Hide all violations initially
+        hideAllViolations();
+
+        // Perform highlighting and filtering based on the search value
+        highlighter.mark(value, {
+            element: "span",
+            exclude: ["dt"],
+            acrossElements: true,
+            accuracy: "partially",
+            className: "highlight",
+            each: (e) => onSearchTermMatch(e, onFilters),
+            noMatch: hideAllViolations
+        });
+
+        // update url param
+        updateUrlParam(url, 'search', value);
+        updateVisibleIssuesCount();
+    };
 
     const filters = document.querySelectorAll("input[name='impact']");
 
@@ -197,7 +193,7 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
     });
 
     // URL query parameters
-    const checkAndApplyUrlParameters = () => {
+    const maybeApplyUrlParametersOnLoad = () => {
         url.searchParams.forEach((valueFromUrl, name) => {
             if (name === "search") {
                 search.value = valueFromUrl;
@@ -217,7 +213,7 @@ export function initialiseFilterAndSearch(violationList, groupedIssues) {
         });
         applyFilters();
     }
-    checkAndApplyUrlParameters();
+    maybeApplyUrlParametersOnLoad();
 
     // Update count on page load
     updateVisibleIssuesCount();

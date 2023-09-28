@@ -24,21 +24,18 @@ export function initialiseFilterAndSearch(violationList) {
 
     function applyPageState() {
         const isVisible = (pageState, dataHash, dataImpact) => {
-            return (pageState.searchMatches.includes(dataHash) || pageState.searchMatches.length === 0) &&
+            return (pageState.searchMatches.find(data => data.dataHash === dataHash) || pageState.searchMatches.length === 0) &&
                 (pageState.activeFilters.includes(dataImpact) || pageState.activeFilters.length === 0);
         }
 
-        // TODO
-        const expandAffectsLinks = (dataHash) => {
-            const elemListItem = document.querySelector(`li[data-hash="${dataHash}"]`);
-            if (elemListItem) {
-                const affectsLink = elemListItem.querySelector('#urlViolations');
-                if (affectsLink) {
-                    const affectsDetails = affectsLink.closest('details');
-                    if (affectsDetails) {
-                        affectsDetails.setAttribute('open', '');
-                    }
-                }
+        const expandMatchingAffectsLinks = (elem) => {
+            const details = elem.querySelector('details');
+
+            const isMatchedDetails = pageState.searchMatches.find(data => data.maybeAffectElement === details);
+            if(isMatchedDetails) {
+                details.setAttribute('open', '');
+            } else {
+                details.removeAttribute('open');
             }
         }
 
@@ -55,7 +52,7 @@ export function initialiseFilterAndSearch(violationList) {
             } else {
                 if (isVisible(pageState, elemDataHash, elemDataImpact)) {
                     elem.classList.remove('hidden');
-                    // expandAffectsLinks(elemDataHash); // TODO where should this be
+                    expandMatchingAffectsLinks(elem);
                     return 1;
                 } else {
                     elem.classList.add('hidden');
@@ -64,7 +61,7 @@ export function initialiseFilterAndSearch(violationList) {
             }
         }).reduce((acc, num) => acc + num, 0);
 
-        // update visible issues count based on page state
+        // update visible issues count
         if (visibleIssuesCount === 0) {
             issueCount.textContent = "No issues identified.";
         } else {
@@ -75,7 +72,7 @@ export function initialiseFilterAndSearch(violationList) {
         updateUrlParam(url, 'search', pageState.searchTerm);
         updateUrlParam(url, 'filters', pageState.activeFilters.join(','));
 
-        //     update filter controls
+        // update filter controls
         filters.forEach((filter) => (filter.checked = false));
         pageState.activeFilters.forEach((filter) => {
             const filterElem = document.getElementById(`impact-${filter}`);
@@ -108,7 +105,9 @@ export function initialiseFilterAndSearch(violationList) {
             const dataHashFound = element.closest("li[data-hash]");
             if (dataHashFound) {
                 const elemDataHash = dataHashFound.getAttribute('data-hash');
-                pageState.searchMatches.push(elemDataHash);
+
+                const maybeAffectElement = element.closest('details');
+                pageState.searchMatches.push({dataHash: elemDataHash, maybeAffectElement});
             }
         }
 
@@ -164,7 +163,6 @@ export function initialiseFilterAndSearch(violationList) {
         });
     }
 
-    // Apply URL query parameters on page load
     function maybeApplyUrlParametersOnPageLoad() {
         url.searchParams.forEach((valueFromUrl, name) => {
             if (name === "search") {

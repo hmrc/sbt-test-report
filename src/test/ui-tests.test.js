@@ -132,6 +132,7 @@ describe('Accessibility Report', () => {
 
             const permaLinkValue = await page.$eval('#violationPermaLink',
                     el => el.closest('li[data-hash]').getAttribute('data-hash'));
+            expect(page.url()).toBe("http://localhost:3000/?search=90d6dba75e8108882925578f97571a75");
 
             const searchInputValue = await page.$eval('#search', el => el.value);
             expect(searchInputValue).toBe(permaLinkValue);
@@ -145,11 +146,15 @@ describe('Accessibility Report', () => {
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations.length).toBe(0);
 
+            expect(page.url()).toBe("http://localhost:3000/?search=90d6dba75e8108882925578f97571a75&filters=serious");
+
             // 3. user also clicks on moderate - x results found
             await clickOn('#impact-moderate');
 
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations.length).toBe(0);
+
+            expect(page.url()).toBe("http://localhost:3000/?search=90d6dba75e8108882925578f97571a75&filters=serious%2Cmoderate");
 
             // 4. user removes search term - x results found
             await page.$eval('#search', el => el.value = '');
@@ -160,11 +165,15 @@ describe('Accessibility Report', () => {
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations).toEqual(['moderate']);
 
+            expect(page.url()).toBe("http://localhost:3000/?filters=serious%2Cmoderate");
+
             // 5. user clicks clear - initial page results displayed
             await clickOn('#clear');
 
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations).toEqual(['critical', 'critical', 'moderate', 'info']);
+
+            expect(page.url()).toBe("http://localhost:3000/");
         });
     });
 });

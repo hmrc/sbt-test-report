@@ -1,7 +1,7 @@
 import {populateTemplate} from "./template.mjs";
 import {metaDataHeader} from "./metaDataHeader.mjs";
 import {createGroupedIssues, sortByImpact} from "./issues.mjs";
-import {initialiseFilterAndSearch} from "./filterAndSearch.js";
+import {initialiseFilterAndSearch} from "./filterAndSearch.mjs";
 
 export function init() {
     const {reportMetaData, axeAssessedPages} = reportData();
@@ -22,7 +22,8 @@ export function init() {
         violationList.appendChild(clonedTemplate);
     });
 
-    initialiseFilterAndSearch(violationList);
+    const highlighter = new Mark(violationList);
+    initialiseFilterAndSearch(violationList, highlighter);
 }
 
 document.body.addEventListener("load", init(), false);

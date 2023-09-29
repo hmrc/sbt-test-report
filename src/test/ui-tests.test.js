@@ -89,6 +89,54 @@ describe('Accessibility Report', () => {
             const violations = await page.$$eval('li[data-impact]', els => els.map(el => el.getAttribute('data-impact')));
             expect(violations).toEqual(['critical', 'critical', 'moderate', 'info']);
         });
+
+        it('should show 1 matching violation using search parameter', async () => {
+            await page.goto('http://localhost:3000/?search=ARIA');
+
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("Displaying 1 of 4 issues identified.");
+
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual([ 'moderate' ]);
+        });
+
+        it('should show 2 matching violation using the filter parameter', async () => {
+            await page.goto('http://localhost:3000/?filters=critical');
+
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("Displaying 2 of 4 issues identified.");
+
+            const impactCritical = await page.$eval('#impact-critical', el => el.checked);
+            const impactSerious = await page.$eval('#impact-serious', el => el.checked);
+            const impactModerate = await page.$eval('#impact-moderate', el => el.checked);
+            const impactInfo = await page.$eval('#impact-info', el => el.checked);
+            expect(impactCritical).toBeTruthy();
+            expect(impactSerious).toBeFalsy();
+            expect(impactModerate).toBeFalsy();
+            expect(impactInfo).toBeFalsy();
+
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual([ 'critical', 'critical' ]);
+        });
+
+        it('should show 0 matching violation using both search and filter parameter', async () => {
+            await page.goto('http://localhost:3000/?search=href&filters=info');
+
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("No issues identified.");
+
+            const impactCritical = await page.$eval('#impact-critical', el => el.checked);
+            const impactSerious = await page.$eval('#impact-serious', el => el.checked);
+            const impactModerate = await page.$eval('#impact-moderate', el => el.checked);
+            const impactInfo = await page.$eval('#impact-info', el => el.checked);
+            expect(impactCritical).toBeFalsy();
+            expect(impactSerious).toBeFalsy();
+            expect(impactModerate).toBeFalsy();
+            expect(impactInfo).toBeTruthy();
+
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual([]);
+        });
     });
 
     describe('Search', () => {

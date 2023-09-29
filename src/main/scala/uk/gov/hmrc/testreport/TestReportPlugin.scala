@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.testreport
 
-import sbt.*
 import _root_.io.circe.syntax.EncoderOps
+import sbt.*
+import uk.gov.hmrc.testreport.DataFormatter.formatDate
 import uk.gov.hmrc.testreport.ReportMetaData.*
 
-import java.text.SimpleDateFormat
-import java.util.{Calendar, Date}
+import java.util.Calendar
 
 object TestReportPlugin extends AutoPlugin {
 
@@ -51,22 +51,9 @@ object TestReportPlugin extends AutoPlugin {
       log.info("Generating accessibility assessment report ...")
       os.makeDir.all(os.Path(reportDirectory.value / "html-report" / "assets"))
 
-      val assets = List(
-        "data.js",
-        "md5.js",
-        "mark.min.js",
-        "report.mjs",
-        "style.css"
-      )
-
-      val htmlReport = "index.html"
-
-      assets.foreach { fileName =>
-        os.write.over(
-          os.Path(reportDirectory.value / "html-report" / "assets" / fileName),
-          os.read(os.resource(getClass.getClassLoader) / "assets" / fileName)
-        )
-      }
+      val sourceFolder = os.Path(os.read(os.resource(getClass.getClassLoader) / "assets"))
+      val targetFolder = os.Path(reportDirectory.value / "html-report" / "assets")
+      os.copy.over(sourceFolder, targetFolder, createFolders = true, replaceExisting = true)
 
       val axeResults = os.list
         .stream(axeResultsDirectory)
@@ -79,27 +66,6 @@ object TestReportPlugin extends AutoPlugin {
 
       val jenkinsBuildId  = sys.env.get("BUILD_ID")
       val jenkinsBuildUrl = sys.env.getOrElse("BUILD_URL", "#")
-
-      def getOrdinalSuffix(day: Int): String =
-        if (day % 10 == 1 && day != 11) {
-          "st"
-        } else if (day % 10 == 2 && day != 12) {
-          "nd"
-        } else if (day % 10 == 3 && day != 13) {
-          "rd"
-        } else {
-          "th"
-        }
-
-      def formatDate(date: Date): String = {
-        val dayFormat        = new SimpleDateFormat("d")
-        val restOfDateFormat = new SimpleDateFormat("MMMM yyyy 'at' hh:mma")
-
-        val day           = dayFormat.format(date).toInt
-        val ordinalSuffix = getOrdinalSuffix(day)
-
-        s"$day$ordinalSuffix ${restOfDateFormat.format(date)}"
-      }
 
       val date               = formatDate(Calendar.getInstance().getTime)
       val reportMetaData     = ReportMetaData(
@@ -117,6 +83,7 @@ object TestReportPlugin extends AutoPlugin {
         .replaceAllLiterally("INJECT_REPORT_METADATA", jsonString)
       os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)
 
+      val htmlReport = "index.html"
       os.write.over(
         os.Path(reportDirectory.value / "html-report" / htmlReport),
         os.read(os.resource(getClass.getClassLoader) / htmlReport)

@@ -109,9 +109,6 @@ describe('clearUrlParams', () => {
 
         // Ensure that history.pushState was called with the correct arguments
         expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/');
-
-        // Ensure that window.location.reload was called
-        expect(window.location.reload).toHaveBeenCalled();
     });
 
     test('should not remove parameters if they do not exist in the URL', () => {
@@ -125,9 +122,6 @@ describe('clearUrlParams', () => {
 
         // Ensure that history.pushState was called with the correct arguments
         expect(history.pushState).toHaveBeenCalledWith({}, '', 'http://example.com/?some=other');
-
-        // Ensure that window.location.reload was called
-        expect(window.location.reload).toHaveBeenCalled();
     });
 });
 

@@ -11,7 +11,6 @@ export function clearUrlParams(url) {
     if (url.searchParams.has('search')) url.searchParams.delete('search');
 
     history.pushState({}, "", url.href);
-    window.location.reload();
 }
 
 export function debounce(func, delay) {

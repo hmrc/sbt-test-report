@@ -6,11 +6,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-
-const reportMetaData = require('./src/test/resources/report_meta_data.json');
-const axeAssessedPages = require('./src/test/resources/axe_results.json');
+const reportMetaData = JSON.parse(fs.readFileSync('./src/test/resources/report_meta_data.json', 'utf-8'));
+const axeAssessedPages = JSON.parse(fs.readFileSync('./src/test/resources/axe_results.json', 'utf-8'));
 
 const dataJsFile = __dirname + '/src/main/resources/assets/data.js';
 

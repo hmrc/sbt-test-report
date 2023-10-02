@@ -21,7 +21,8 @@ import sbt.*
 import uk.gov.hmrc.testreport.DataFormatter.formatDate
 import uk.gov.hmrc.testreport.ReportMetaData.*
 
-import java.util.Calendar
+import java.nio.file.{FileSystems, Path}
+import java.util.{Calendar, Collections}
 
 object TestReportPlugin extends AutoPlugin {
 
@@ -51,8 +52,9 @@ object TestReportPlugin extends AutoPlugin {
       log.info("Generating accessibility assessment report ...")
       os.makeDir.all(os.Path(reportDirectory.value / "html-report" / "assets"))
 
-      val sourceFolder = os.Path(os.read(os.resource(getClass.getClassLoader) / "assets"))
-      val targetFolder = os.Path(reportDirectory.value / "html-report" / "assets")
+      val sourcePath   = mountResources("assets")
+      val sourceFolder = os.Path(sourcePath)
+      val targetFolder = os.Path(reportDirectory.value / "html-report")
       os.copy.over(sourceFolder, targetFolder, createFolders = true, replaceExisting = true)
 
       val axeResults = os.list
@@ -91,5 +93,12 @@ object TestReportPlugin extends AutoPlugin {
     } else {
       log.error("No axe results found to generate accessibility assessment report.")
     }
+  }
+
+  private def mountResources(resourcesPath: String): Path = {
+    val uri          = getClass.getClassLoader.getResource(resourcesPath).toURI
+    val fileSystem   = FileSystems.newFileSystem(uri, Collections.emptyMap(), null)
+    val absolutePath = fileSystem.getPath("/");
+    absolutePath
   }
 }

@@ -3,7 +3,7 @@
  */
 
 import {jest, test, describe, expect} from '@jest/globals';
-import {createGroupedIssues, sortByImpact} from '../main/resources/assets/js/issues.mjs';
+import {createGroupedIssues, sortByImpact} from '../main/resources/assets/js/issues.js';
 
 // import md5 from '../main/resources/assets/lib/md5.js';
 // jest.mock('../main/resources/assets/lib/md5.js', () => {

@@ -3,7 +3,7 @@
  */
 
 import {jest, test, describe, expect, beforeEach, afterEach} from '@jest/globals';
-import {clearUrlParams, debounce, updateUrlParam} from '../main/resources/assets/js/browserHelper.mjs';
+import {clearUrlParams, debounce, updateUrlParam} from '../main/resources/assets/js/browserHelper.js';
 
 describe('debounce', () => {
 

@@ -1,6 +1,8 @@
-const puppeteer = require('puppeteer');
-const {resetData, interceptReportMetaData, interceptAxeAssessedPages} = require('./intercept');
-const {describe, beforeEach, beforeAll, afterAll, expect, it} = require('@jest/globals');
+import {jest} from '@jest/globals'
+import {describe, beforeEach, beforeAll, afterAll, expect, it} from '@jest/globals';
+
+import puppeteer from 'puppeteer';
+import {resetData, interceptReportMetaData, interceptAxeAssessedPages} from './intercept.mjs';
 
 jest.setTimeout(20000);
 
@@ -50,7 +52,7 @@ describe('Accessibility Report', () => {
     describe('On initial page load', () => {
 
         it('header should display report meta data from jenkins"', async () => {
-           const reportHeaderMetaData = await page.$eval('#headerMetaData', el => el.textContent);
+           const reportHeaderMetaData = await page.$eval('#metaDataHeader', el => el.textContent);
            expect(reportHeaderMetaData).toBe('Generated from build #42 (Chrome) of platform-example-ui-tests on 09-11-2023');
         });
 
@@ -62,7 +64,7 @@ describe('Accessibility Report', () => {
                 "dateOfAssessment": "09-16-2023"
             }, page);
 
-            const reportHeaderMetaData = await page.$eval('#headerMetaData', el => el.textContent);
+            const reportHeaderMetaData = await page.$eval('#metaDataHeader', el => el.textContent);
             expect(reportHeaderMetaData).toBe('Generated from platform-example-ui-tests on 09-16-2023');
         });
 
@@ -86,6 +88,54 @@ describe('Accessibility Report', () => {
 
             const violations = await page.$$eval('li[data-impact]', els => els.map(el => el.getAttribute('data-impact')));
             expect(violations).toEqual(['critical', 'critical', 'moderate', 'info']);
+        });
+
+        it('should show 1 matching violation using search parameter', async () => {
+            await page.goto('http://localhost:3000/?search=ARIA');
+
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("Displaying 1 of 4 issues identified.");
+
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual([ 'moderate' ]);
+        });
+
+        it('should show 2 matching violation using the filter parameter', async () => {
+            await page.goto('http://localhost:3000/?filters=critical');
+
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("Displaying 2 of 4 issues identified.");
+
+            const impactCritical = await page.$eval('#impact-critical', el => el.checked);
+            const impactSerious = await page.$eval('#impact-serious', el => el.checked);
+            const impactModerate = await page.$eval('#impact-moderate', el => el.checked);
+            const impactInfo = await page.$eval('#impact-info', el => el.checked);
+            expect(impactCritical).toBeTruthy();
+            expect(impactSerious).toBeFalsy();
+            expect(impactModerate).toBeFalsy();
+            expect(impactInfo).toBeFalsy();
+
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual([ 'critical', 'critical' ]);
+        });
+
+        it('should show 0 matching violation using both search and filter parameter', async () => {
+            await page.goto('http://localhost:3000/?search=href&filters=info');
+
+            const issueCount = await page.$eval('#issueCount', el => el.textContent);
+            expect(issueCount).toBe("No issues identified.");
+
+            const impactCritical = await page.$eval('#impact-critical', el => el.checked);
+            const impactSerious = await page.$eval('#impact-serious', el => el.checked);
+            const impactModerate = await page.$eval('#impact-moderate', el => el.checked);
+            const impactInfo = await page.$eval('#impact-info', el => el.checked);
+            expect(impactCritical).toBeFalsy();
+            expect(impactSerious).toBeFalsy();
+            expect(impactModerate).toBeFalsy();
+            expect(impactInfo).toBeTruthy();
+
+            const visibleViolations = await getVisibleViolations();
+            expect(visibleViolations).toEqual([]);
         });
     });
 
@@ -130,6 +180,7 @@ describe('Accessibility Report', () => {
 
             const permaLinkValue = await page.$eval('#violationPermaLink',
                     el => el.closest('li[data-hash]').getAttribute('data-hash'));
+            expect(page.url()).toBe("http://localhost:3000/?search=90d6dba75e8108882925578f97571a75");
 
             const searchInputValue = await page.$eval('#search', el => el.value);
             expect(searchInputValue).toBe(permaLinkValue);
@@ -143,25 +194,34 @@ describe('Accessibility Report', () => {
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations.length).toBe(0);
 
+            expect(page.url()).toBe("http://localhost:3000/?search=90d6dba75e8108882925578f97571a75&filters=serious");
+
             // 3. user also clicks on moderate - x results found
             await clickOn('#impact-moderate');
 
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations.length).toBe(0);
 
+            expect(page.url()).toBe("http://localhost:3000/?search=90d6dba75e8108882925578f97571a75&filters=serious%2Cmoderate");
+
             // 4. user removes search term - x results found
             await page.$eval('#search', el => el.value = '');
             await page.focus('#search');
             await page.keyboard.press('Backspace');
+            await page.waitForTimeout(pageRefreshDelay);
 
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations).toEqual(['moderate']);
+
+            expect(page.url()).toBe("http://localhost:3000/?filters=serious%2Cmoderate");
 
             // 5. user clicks clear - initial page results displayed
             await clickOn('#clear');
 
             visibleViolations = await getVisibleViolations();
             expect(visibleViolations).toEqual(['critical', 'critical', 'moderate', 'info']);
+
+            expect(page.url()).toBe("http://localhost:3000/");
         });
     });
 });

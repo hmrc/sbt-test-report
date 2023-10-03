@@ -50,11 +50,11 @@ object TestReportPlugin extends AutoPlugin {
 
     if (hasAxeResults) {
       log.info("Generating accessibility assessment report ...")
-      os.makeDir.all(os.Path(reportDirectory.value / "html-report" / "assets"))
+      val targetAssetsPath = reportDirectory.value / "html-report" / "assets"
+      os.makeDir.all(os.Path(targetAssetsPath))
 
-      val sourcePath   = mountResources("assets")
-      val sourceFolder = os.Path(sourcePath)
-      val targetFolder = os.Path(reportDirectory.value / "html-report")
+      val sourceFolder = os.Path(pluginResourcesAssetsPath())
+      val targetFolder = os.Path(targetAssetsPath)
       os.copy.over(sourceFolder, targetFolder, createFolders = true, replaceExisting = true)
 
       val axeResults = os.list
@@ -83,7 +83,7 @@ object TestReportPlugin extends AutoPlugin {
       val updatedReportJs = reportDataJs
         .replaceAllLiterally("INJECT_AXE_VIOLATIONS", axeResults)
         .replaceAllLiterally("INJECT_REPORT_METADATA", jsonString)
-      os.write.over(os.Path(reportDirectory.value / "html-report" / "assets" / "data.js"), updatedReportJs)
+      os.write.over(os.Path(targetAssetsPath / "data.js"), updatedReportJs)
 
       val htmlReport = "index.html"
       os.write.over(
@@ -95,10 +95,10 @@ object TestReportPlugin extends AutoPlugin {
     }
   }
 
-  private def mountResources(resourcesPath: String): Path = {
-    val uri          = getClass.getClassLoader.getResource(resourcesPath).toURI
-    val fileSystem   = FileSystems.newFileSystem(uri, Collections.emptyMap(), null)
-    val absolutePath = fileSystem.getPath("/");
-    absolutePath
+  private def pluginResourcesAssetsPath() = {
+    val uri                = getClass.getClassLoader.getResource("assets").toURI
+    val fileSystem         = FileSystems.newFileSystem(uri, Collections.emptyMap(), null)
+    val absoluteAssetsPath = fileSystem.getPath("/assets")
+    absoluteAssetsPath
   }
 }

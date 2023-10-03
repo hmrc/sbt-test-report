@@ -1,4 +1,4 @@
-import {debounce, updateUrlParam} from "./browserHelper.mjs";
+import {debounce, updateUrlParam} from "./browserHelper.js";
 
 export function initialiseFilterAndSearch(violationList) {
     // model for page state

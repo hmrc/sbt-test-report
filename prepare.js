@@ -33,7 +33,7 @@ export const injectJsonData = async (reportMetaDataJson, axeAssessedPagesJson) =
 
         data = data
             .replace('INJECT_REPORT_METADATA', reportMetaDataJson)
-            .replace('INJECT_AXE_VIOLATIONS', axeAssessedPagesJson);
+            .replace('[ INJECT_AXE_VIOLATIONS ]', axeAssessedPagesJson);
 
         await fs.writeFile(dataJsFile, data, 'utf8', (err) => {
             if (err) {

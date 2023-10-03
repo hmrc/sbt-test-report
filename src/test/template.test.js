@@ -7,7 +7,7 @@ import path from 'path';
 import {beforeAll, describe, expect, test} from '@jest/globals';
 
 import {fileURLToPath} from 'url';
-import {populateTemplate} from "../main/resources/assets/js/template.mjs";
+import {populateTemplate} from "../main/resources/assets/js/template.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

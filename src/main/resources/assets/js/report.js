@@ -1,7 +1,7 @@
-import {populateTemplate} from "./template.mjs";
-import {metaDataHeader} from "./metaDataHeader.mjs";
-import {createGroupedIssues, sortByImpact} from "./issues.mjs";
-import {initialiseFilterAndSearch} from "./filterAndSearch.mjs";
+import {populateTemplate} from "./template.js";
+import {metaDataHeader} from "./metaDataHeader.js";
+import {createGroupedIssues, sortByImpact} from "./issues.js";
+import {initialiseFilterAndSearch} from "./filterAndSearch.js";
 
 export function init() {
     const {reportMetaData, axeAssessedPages} = reportData();

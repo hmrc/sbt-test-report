@@ -3,7 +3,7 @@
  */
 
 import {jest, test, describe, beforeEach, expect} from '@jest/globals';
-import {metaDataHeader} from '../main/resources/assets/js/metaDataHeader.mjs';
+import {metaDataHeader} from '../main/resources/assets/js/metaDataHeader.js';
 
 let reportMetaDataElement;
 

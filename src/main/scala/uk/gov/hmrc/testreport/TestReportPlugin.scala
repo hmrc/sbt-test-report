@@ -17,6 +17,7 @@
 package uk.gov.hmrc.testreport
 
 import _root_.io.circe.syntax.EncoderOps
+import _root_.java.io.{BufferedReader, InputStreamReader}
 import sbt.*
 import uk.gov.hmrc.testreport.DataFormatter.formatDate
 import uk.gov.hmrc.testreport.ReportMetaData.*
@@ -57,14 +58,34 @@ object TestReportPlugin extends AutoPlugin {
       val targetFolder = os.Path(targetAssetsPath)
       os.copy.over(sourceFolder, targetFolder, createFolders = true, replaceExisting = true)
 
-      val axeResults = os.list
-        .stream(axeResultsDirectory)
-        .filter(os.isDir)
-        .map { timestampDirectory =>
-          val ujsonValue = ujson.read(os.read(timestampDirectory / "axeResults.json"))
-          ujson.write(ujsonValue)
-        }
-        .mkString(",")
+      import os.Path
+      def processAxeResults(axeResultsDirectory: Path) = {
+        os.list(axeResultsDirectory)
+          .filter(os.isDir)
+          .foreach { timestampDirectory =>
+            val jsonFile = timestampDirectory / "axeResults.json"
+
+            if (os.exists(jsonFile)) {
+              val reader = new BufferedReader(new InputStreamReader(os.read.inputStream(jsonFile)))
+
+              val buffer = new Array[Char](4096)
+
+              var bytesRead = 0
+              while ( {
+                bytesRead = reader.read(buffer); bytesRead
+              } != -1) {
+                val jsonChunk = new String(buffer, 0, bytesRead)
+
+                // TODO Perform your action with the JSON chunk, e.g., write to the report json file
+                println(jsonChunk)
+              }
+
+              reader.close()
+            }
+          }
+          ""
+      }
+      val axeResults = processAxeResults(axeResultsDirectory)
 
       val jenkinsBuildId  = sys.env.get("BUILD_ID")
       val jenkinsBuildUrl = sys.env.getOrElse("BUILD_URL", "#")

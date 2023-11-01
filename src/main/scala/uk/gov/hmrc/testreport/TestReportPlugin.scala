@@ -157,13 +157,10 @@ object TestReportPlugin extends AutoPlugin {
                     id := "accessibility-assessment",
                     cls := "flow",
                     role := "list",
-                    axeResults.zipWithIndex.map { case (result, index) =>
-                      val resultCount             = index + 1
-                      val resultTestEngineVersion = result("testEngine")("version").str
-                      val violations              = result("violations").arr
+                    axeResults.map { result =>
+                      val violations = result("violations").arr
 
                       violations.map { violation =>
-                        val violationId         = violation("id").str
                         val violationImpact     = violation("impact").str
                         val violationHelp       = violation("help").str
                         val violationHelpUrl    = violation("helpUrl").str
@@ -172,80 +169,53 @@ object TestReportPlugin extends AutoPlugin {
 
                         li(
                           article(
-                            id := resultCount,
                             cls := "card border",
                             header(
-                              cls := "repel border-bottom region",
-                              h2(
-                                a(
-                                  href := violationHelpUrl,
-                                  target := "_blank",
-                                  attr("data-violation") := "id",
-                                  violationId
-                                )
-                              ),
-                              ul(
-                                cls := "cluster",
-                                role := "list",
-                                li(
-                                  span(
-                                    cls := "tag",
-                                    attr("data-violation") := "impact",
-                                    attr("data-impact") := violationImpact,
-                                    violationImpact
-                                  )
-                                ),
-                                li(
-                                  span(
-                                    cls := "tag tag-brand",
-                                    attr("data-violation") := "version",
-                                    resultTestEngineVersion
-                                  )
-                                ),
-                                li(
-                                  span(
-                                    cls := "tag tag-blue",
-                                    attr("data-violation") := "permalink",
-                                    a(
-                                      if (isJenkinsBuild)
-                                        href := s"$jenkinsBuildUrl/Accessibility_20Assessment_20Report/#$resultCount"
-                                      else href := s"$htmlReport/#$resultCount",
-                                      s"#$resultCount"
-                                    )
-                                  )
-                                )
+                              cls := "repel region",
+                              h2(violationHelp),
+                              span(
+                                cls := "tag",
+                                attr("data-impact") := violationImpact,
+                                attr("aria-label") := s"Issue impact is $violationImpact",
+                                violationImpact
                               )
                             ),
                             dl(
+                              cls := "border-top",
                               div(
                                 cls := "border-bottom flow region",
-                                dt("Help"),
+                                dt("Documentation"),
                                 dd(
-                                  attr("data-violation") := "help",
-                                  violationHelp
-                                )
-                              ),
-                              div(
-                                cls := "border-bottom flow region",
-                                dt("HTML"),
-                                dd(
-                                  details(
-                                    summary(s"${violationNodes.length} elements affected"),
-                                    ul(
-                                      cls := "flow",
-                                      role := "list",
-                                      attr("data-violation") := "html",
-                                      violationNodes.map(i => li(pre(i("html").str)))
-                                    )
+                                  a(
+                                    href := violationHelpUrl,
+                                    target := "_blank",
+                                    violationHelpUrl
                                   )
                                 )
                               ),
                               div(
                                 cls := "flow region",
-                                dt("URL"),
+                                dt("Affected"),
                                 dd(
-                                  attr("data-violation") := "urls",
-                                  a(href := "#", violationAffectsUrl)
+                                  details(
+                                    summary("-n- elements affected (-n- unique) across -urls length- pages"),
+                                    ul(
+                                      cls := "flow region",
+                                      li(
+                                        cls := "flow",
+                                        a(
+                                          href := violationAffectsUrl,
+                                          target := "_blank",
+                                          violationAffectsUrl
+                                        ),
+                                        ul(
+                                          cls := "flow",
+                                          role := "list",
+                                          violationNodes.map(i => li(pre(i("html").str)))
+                                        )
+                                      )
+                                    )
+                                  )
                                 )
                               )
                             )

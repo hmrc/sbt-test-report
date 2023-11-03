@@ -70,11 +70,48 @@ object TestReportPlugin extends AutoPlugin {
         os.read(os.resource(getClass.getClassLoader) / "assets" / "scripts" / "search.min.js")
       )
 
-      // Get axe results and total violations count
-      val axeResults         = os.list.stream(axeResultsDirectory).filter(os.isDir).map { timestampDirectory =>
-        ujson.read(os.read(timestampDirectory / "axeResults.json"))
-      }
-      val axeViolationsCount = axeResults.map(result => result("violations").arr.length).sum
+      val allIssues = for {
+        reportDir <- os.list.stream(axeResultsDirectory).filter(os.isDir)
+        reportJson = ujson.read(os.read(reportDir / "axeResults.json"))
+        violation <- reportJson("violations").arr
+        snippet   <- violation("nodes").arr
+      } yield Map(
+        "url"     -> reportJson("url").str,
+        "help"    -> violation("help").str,
+        "helpUrl" -> violation("helpUrl").str,
+        "impact"  -> violation("impact").str,
+        "html"    -> snippet("html").str
+      )
+
+      case class Occurrence(url: String, snippets: Set[String])
+      case class Violation(
+        help: String,
+        helpUrl: String,
+        impact: String,
+        occurrences: List[Occurrence]
+      )
+
+      val groupedAndDeduped = allIssues.toList
+        .groupBy(_("help"))
+        .map { case (help, occurrences) =>
+          Violation(
+            help = help,
+            helpUrl = occurrences.head("helpUrl"),
+            impact = occurrences.head("impact"),
+            occurrences = occurrences
+              .groupBy(_("url"))
+              .map { case (url, issues) =>
+                Occurrence(
+                  url = url,
+                  snippets = Set(issues.map(_("html")): _*)
+                )
+              }
+              .toList
+          )
+        }
+        .toList
+
+      val axeViolationsCount = groupedAndDeduped.length
 
       // Get current datetime
       val htmlDateTime     = ZonedDateTime.now().truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
@@ -157,61 +194,57 @@ object TestReportPlugin extends AutoPlugin {
                     id := "accessibility-assessment",
                     cls := "flow",
                     role := "list",
-                    axeResults.map { result =>
-                      val violations = result("violations").arr
+                    groupedAndDeduped.map { violation =>
+                      val violationImpact  = violation.impact
+                      val violationHelp    = violation.help
+                      val violationHelpUrl = violation.helpUrl
 
-                      violations.map { violation =>
-                        val violationImpact     = violation("impact").str
-                        val violationHelp       = violation("help").str
-                        val violationHelpUrl    = violation("helpUrl").str
-                        val violationNodes      = violation("nodes").arr
-                        val violationAffectsUrl = result("url").str
-
-                        li(
-                          article(
-                            cls := "card border",
-                            header(
-                              cls := "repel region",
-                              h2(violationHelp),
-                              span(
-                                cls := "tag",
-                                attr("data-impact") := violationImpact,
-                                attr("aria-label") := s"Issue impact is $violationImpact",
-                                violationImpact
+                      li(
+                        article(
+                          cls := "card border",
+                          header(
+                            cls := "repel region",
+                            h2(violationHelp),
+                            span(
+                              cls := "tag",
+                              attr("data-impact") := violationImpact,
+                              attr("aria-label") := s"Issue impact is $violationImpact",
+                              violationImpact
+                            )
+                          ),
+                          dl(
+                            cls := "border-top",
+                            div(
+                              cls := "border-bottom flow region",
+                              dt("Documentation"),
+                              dd(
+                                a(
+                                  href := violationHelpUrl,
+                                  target := "_blank",
+                                  violationHelpUrl
+                                )
                               )
                             ),
-                            dl(
-                              cls := "border-top",
-                              div(
-                                cls := "border-bottom flow region",
-                                dt("Documentation"),
-                                dd(
-                                  a(
-                                    href := violationHelpUrl,
-                                    target := "_blank",
-                                    violationHelpUrl
-                                  )
-                                )
-                              ),
-                              div(
-                                cls := "flow region",
-                                dt("Affected"),
-                                dd(
-                                  details(
-                                    summary("-n- elements affected (-n- unique) across -urls length- pages"),
-                                    ul(
-                                      cls := "flow region",
+                            div(
+                              cls := "flow region",
+                              dt("Affected"),
+                              dd(
+                                details(
+                                  summary("-n- elements affected (-n- unique) across -urls length- pages"),
+                                  ul(
+                                    cls := "flow region",
+                                    violation.occurrences.map(occurrence =>
                                       li(
                                         cls := "flow",
                                         a(
-                                          href := violationAffectsUrl,
+                                          href := occurrence.url,
                                           target := "_blank",
-                                          violationAffectsUrl
+                                          occurrence.url
                                         ),
                                         ul(
                                           cls := "flow",
                                           role := "list",
-                                          violationNodes.map(i => li(pre(i("html").str)))
+                                          occurrence.snippets.map(html => li(pre(html))).toList
                                         )
                                       )
                                     )
@@ -221,7 +254,7 @@ object TestReportPlugin extends AutoPlugin {
                             )
                           )
                         )
-                      }
+                      )
                     }
                   )
                 )

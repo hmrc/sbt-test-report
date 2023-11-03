@@ -70,7 +70,8 @@ object TestReportPlugin extends AutoPlugin {
         os.read(os.resource(getClass.getClassLoader) / "assets" / "scripts" / "search.min.js")
       )
 
-      val allIssues = for {
+      // Get all axe violations
+      val axeViolationsAll = for {
         reportDir <- os.list.stream(axeResultsDirectory).filter(os.isDir)
         reportJson = ujson.read(os.read(reportDir / "axeResults.json"))
         violation <- reportJson("violations").arr
@@ -83,6 +84,7 @@ object TestReportPlugin extends AutoPlugin {
         "html"    -> snippet("html").str
       )
 
+      // Group and deduplicate all axe violations
       case class Occurrence(url: String, snippets: Set[String])
       case class Violation(
         help: String,
@@ -91,7 +93,7 @@ object TestReportPlugin extends AutoPlugin {
         occurrences: List[Occurrence]
       )
 
-      val groupedAndDeduped = allIssues.toList
+      val axeViolationsFiltered = axeViolationsAll.toList
         .groupBy(_("help"))
         .map { case (help, occurrences) =>
           Violation(
@@ -103,7 +105,7 @@ object TestReportPlugin extends AutoPlugin {
               .map { case (url, issues) =>
                 Occurrence(
                   url = url,
-                  snippets = Set(issues.map(_("html")): _*)
+                  snippets = Set(issues.map(_("html")) *)
                 )
               }
               .toList
@@ -111,7 +113,8 @@ object TestReportPlugin extends AutoPlugin {
         }
         .toList
 
-      val axeViolationsCount = groupedAndDeduped.length
+      // Get total axe violations count
+      val axeViolationsCount = axeViolationsFiltered.length
 
       // Get current datetime
       val htmlDateTime     = ZonedDateTime.now().truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
@@ -194,7 +197,7 @@ object TestReportPlugin extends AutoPlugin {
                     id := "accessibility-assessment",
                     cls := "flow",
                     role := "list",
-                    groupedAndDeduped.map { violation =>
+                    axeViolationsFiltered.map { violation =>
                       val violationImpact  = violation.impact
                       val violationHelp    = violation.help
                       val violationHelpUrl = violation.helpUrl

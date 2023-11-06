@@ -16,89 +16,293 @@
 
 package uk.gov.hmrc.testreport
 
-import _root_.io.circe.syntax.EncoderOps
 import sbt.*
-import uk.gov.hmrc.testreport.DataFormatter.formatDate
-import uk.gov.hmrc.testreport.ReportMetaData.*
+import scalatags.Text.all.*
+import scalatags.Text.svgTags.{path, svg}
+import scalatags.Text.tags2.{article, details, nav, summary, time}
 
-import java.nio.file.{FileSystems, Path}
-import java.util.{Calendar, Collections}
+import java.time.ZonedDateTime
+import java.time.format.{DateTimeFormatter, FormatStyle}
+import java.time.temporal.ChronoUnit
 
 object TestReportPlugin extends AutoPlugin {
 
   override def trigger = allRequirements
 
   object autoImport {
-    val testReport      = taskKey[Unit]("generate test report")
-    val reportDirectory = settingKey[File]("output directory")
-    val htmlReport      = settingKey[File]("output file")
+    val testReport          = taskKey[Unit]("generate test report")
+    val testReportDirectory = settingKey[File]("test report directory")
   }
 
   import autoImport.*
 
   override lazy val projectSettings: Seq[Def.Setting[?]] = Seq(
     testReport := generateTestReport().value,
-    reportDirectory := (Keys.target.value / "test-reports" / "accessibility-assessment"),
-    htmlReport := (reportDirectory.value / "html-report" / "index.html")
+    testReportDirectory := Keys.target.value / "test-reports"
   )
 
   private def generateTestReport(): Def.Initialize[Task[Unit]] = Def.task {
-    val log                 = sbt.Keys.streams.value.log
-    val axeResultsDirectory = os.Path(reportDirectory.value / "axe-results")
+    val axeResultsDirectory = os.Path(testReportDirectory.value / "accessibility-assessment" / "axe-results")
+    val logger              = sbt.Keys.streams.value.log
 
-    def hasAxeResults: Boolean = os.exists(axeResultsDirectory)
+    if (os.exists(axeResultsDirectory)) {
+      logger.info("Generating accessibility assessment report ...")
 
-    if (hasAxeResults) {
-      log.info("Generating accessibility assessment report ...")
-      val targetAssetsPath = reportDirectory.value / "html-report" / "assets"
-      os.makeDir.all(os.Path(targetAssetsPath))
+      val projectName         = Keys.name.value
+      val isJenkinsBuild      = sys.env.contains("BUILD_ID")
+      val jenkinsBuildId      = sys.env.get("BUILD_ID")
+      val jenkinsBuildUrl     = sys.env.getOrElse("BUILD_URL", "#")
+      val jenkinsBrowser      = sys.env.getOrElse("BROWSER", "#")
+      val htmlReportDirectory = testReportDirectory.value / "accessibility-assessment" / "html-report"
+      val htmlReport          = htmlReportDirectory / "index.html"
 
-      val sourceFolder = os.Path(pluginResourcesAssetsPath())
-      val targetFolder = os.Path(targetAssetsPath)
-      os.copy.over(sourceFolder, targetFolder, createFolders = true, replaceExisting = true)
-
-      val axeResults = os.list
-        .stream(axeResultsDirectory)
-        .filter(os.isDir)
-        .map { timestampDirectory =>
-          val ujsonValue = ujson.read(os.read(timestampDirectory / "axeResults.json"))
-          ujson.write(ujsonValue)
-        }
-        .mkString(",")
-
-      val jenkinsBuildId  = sys.env.get("BUILD_ID")
-      val jenkinsBuildUrl = sys.env.getOrElse("BUILD_URL", "#")
-
-      val date               = formatDate(Calendar.getInstance().getTime)
-      val reportMetaData     = ReportMetaData(
-        Keys.name.value,
-        jenkinsBuildId,
-        jenkinsBuildUrl,
-        date
-      )
-      val reportMetaDataJson = reportMetaData.asJson;
-      val jsonString         = reportMetaDataJson.noSpaces
-
-      val reportDataJs    = os.read(os.resource(getClass.getClassLoader) / "assets" / "data.js")
-      val updatedReportJs = reportDataJs
-        .replaceAllLiterally("INJECT_AXE_VIOLATIONS", axeResults)
-        .replaceAllLiterally("INJECT_REPORT_METADATA", jsonString)
-      os.write.over(os.Path(targetAssetsPath / "data.js"), updatedReportJs)
-
-      val htmlReport = "index.html"
+      // Copy styles
+      os.makeDir.all(os.Path(htmlReportDirectory / "css"))
       os.write.over(
-        os.Path(reportDirectory.value / "html-report" / htmlReport),
-        os.read(os.resource(getClass.getClassLoader) / htmlReport)
+        os.Path(htmlReportDirectory / "css" / "style.min.css"),
+        os.read(os.resource(getClass.getClassLoader) / "assets" / "styles" / "style.min.css")
       )
+
+      // Copy scripts
+      os.makeDir.all(os.Path(htmlReportDirectory / "js"))
+      os.write.over(
+        os.Path(htmlReportDirectory / "js" / "search.min.js"),
+        os.read(os.resource(getClass.getClassLoader) / "assets" / "scripts" / "search.min.js")
+      )
+
+      // Get all axe violations
+      val axeViolationsAll = for {
+        reportDir <- os.list.stream(axeResultsDirectory).filter(os.isDir)
+        reportJson = ujson.read(os.read(reportDir / "axeResults.json"))
+        violation <- reportJson("violations").arr
+        snippet   <- violation("nodes").arr
+      } yield Map(
+        "url"     -> reportJson("url").str,
+        "help"    -> violation("help").str,
+        "helpUrl" -> violation("helpUrl").str,
+        "impact"  -> violation("impact").str,
+        "html"    -> snippet("html").str
+      )
+
+      // Group and deduplicate all axe violations
+      case class Occurrence(url: String, snippets: Set[String])
+      case class Violation(help: String, helpUrl: String, impact: String, occurrences: List[Occurrence])
+
+      val axeViolationsFiltered = axeViolationsAll.toList
+        .groupBy(_("help"))
+        .map { case (help, occurrences) =>
+          Violation(
+            help = help,
+            helpUrl = occurrences.head("helpUrl"),
+            impact = occurrences.head("impact"),
+            occurrences = occurrences
+              .groupBy(_("url"))
+              .map { case (url, issues) =>
+                Occurrence(
+                  url = url,
+                  snippets = Set(issues.map(_("html")) *)
+                )
+              }
+              .toList
+          )
+        }
+        .toList
+
+      // Get total axe violations count
+      val axeViolationsCount = axeViolationsFiltered.length
+
+      // Get current datetime
+      val htmlDateTime     = ZonedDateTime.now().truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
+      val readableDateTime = ZonedDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG))
+
+      // Write HTML document
+      os.write.over(
+        os.Path(htmlReport),
+        "<!DOCTYPE html>" + html(
+          head(
+            meta(charset := "utf-8"),
+            meta(name := "viewport", content := "width=device-width, initial-scale=1"),
+            tag("title")(s"Accessibility assessment for $projectName"),
+            link(rel := "stylesheet", href := "css/style.min.css"),
+            meta(
+              name := "description",
+              if (axeViolationsCount == 0) content := "No issues identified."
+              else content := s"$axeViolationsCount issues identified."
+            )
+          ),
+          body(
+            header(
+              cls := "border-bottom",
+              role := "banner",
+              div(
+                cls := "banner",
+                div(
+                  cls := "region wrapper",
+                  p(
+                    if (isJenkinsBuild) a(href := jenkinsBuildUrl, s"#$jenkinsBuildId") else "Local build",
+                    " of ",
+                    a(href := s"https://github.com/hmrc/$projectName", target := "_blank", projectName),
+                    " on ",
+                    time(attr("datetime") := htmlDateTime, readableDateTime),
+                    if (isJenkinsBuild) s" ($jenkinsBrowser)" else ""
+                  )
+                )
+              ),
+              div(
+                cls := "repel region wrapper",
+                a(
+                  cls := "brand",
+                  if (isJenkinsBuild) href := s"$jenkinsBuildUrl/Accessibility_20Assessment_20Report/"
+                  else href := s"$htmlReport",
+                  attr("aria-label") := "Accessibility assessment",
+                  svg(
+                    width := "100",
+                    height := "100",
+                    attr("viewBox") := "0 0 100 100",
+                    attr("fill") := "currentColor",
+                    xmlns := "http://www.w3.org/2000/svg",
+                    path(
+                      attr("d") := "M50,0 C77.6142375,0 100,22.3857625 100,50 C100,77.6142375 77.6142375,100 50,100 C22.3857625,100 0,77.6142375 0,50 C0,22.3857625 22.3857625,0 50,0 Z M50,9.1796875 C27.4555639,9.1796875 9.1796875,27.4555639 9.1796875,50 C9.1796875,72.5444361 27.4555639,90.8203125 50,90.8203125 C72.5444361,90.8203125 90.8203125,72.5444361 90.8203125,50 C90.8203125,27.4555639 72.5444361,9.1796875 50,9.1796875 Z M50,16.9921875 C68.2297115,16.9921875 83.0078125,31.7702885 83.0078125,50 C83.0078125,68.2297115 68.2297115,83.0078125 50,83.0078125 C31.7702885,83.0078125 16.9921875,68.2297115 16.9921875,50 C16.9921875,31.7702885 31.7702885,16.9921875 50,16.9921875 Z M66.796875,39.453125 L33.203125,39.453125 C31.0457627,39.453125 29.296875,41.2020127 29.296875,43.359375 C29.296875,45.5167373 31.0457627,47.265625 33.203125,47.265625 L46.2890625,47.265625 L46.2890625,55.0792969 L35.2174276,69.250252 C33.8892228,70.9502767 34.1906423,73.4051418 35.890667,74.7333467 C37.5906917,76.0615515 40.0455568,75.760132 41.3737617,74.0601073 L50.1,62.890625 L50.234375,62.890625 L58.9608158,74.0601073 C60.2890207,75.760132 62.7438858,76.0615515 64.4439105,74.7333467 C66.1439352,73.4051418 66.4453547,70.9502767 65.1171498,69.250252 L54.1015625,55.1511719 L54.1015625,47.265625 L66.796875,47.265625 C68.9542373,47.265625 70.703125,45.5167373 70.703125,43.359375 C70.703125,41.2020127 68.9542373,39.453125 66.796875,39.453125 Z M50.0976562,23.828125 C46.8076787,23.828125 44.140625,26.4951787 44.140625,29.7851562 C44.140625,33.0751338 46.8076787,35.7421875 50.0976562,35.7421875 C53.3876338,35.7421875 56.0546875,33.0751338 56.0546875,29.7851562 C56.0546875,26.4951787 53.3876338,23.828125 50.0976562,23.828125 Z"
+                    )
+                  )
+                ),
+                nav(
+                  attr("aria-label") := "primary navigation",
+                  form(
+                    id := "form",
+                    cls := "visually-hidden",
+                    input(id := "search", tpe := "search", name := "search", placeholder := "Search...")
+                  )
+                )
+              )
+            ),
+            tag("main")(
+              article(
+                cls := "flow region wrapper",
+                h1("Accessibility assessment"),
+                p(
+                  id := "summary",
+                  attr("aria-live") := "assertive",
+                  if (axeViolationsCount == 0) "No issues identified."
+                  else s"Displaying $axeViolationsCount issues identified."
+                ),
+                div(
+                  cls := "report",
+                  ul(
+                    id := "accessibility-assessment",
+                    cls := "flow",
+                    role := "list",
+                    axeViolationsFiltered.map { violation =>
+                      val impact       = violation.impact
+                      val help         = violation.help
+                      val helpUrl      = violation.helpUrl
+                      val occurrences  = violation.occurrences
+                      val urlCount     = occurrences.length
+                      val elementCount = occurrences.map(occurrence => occurrence.snippets.toList.length).sum
+
+                      li(
+                        article(
+                          cls := "card border",
+                          header(
+                            cls := "repel region",
+                            h2(help),
+                            span(
+                              cls := "tag",
+                              attr("data-impact") := impact,
+                              attr("aria-label") := s"Issue impact is $impact",
+                              impact
+                            )
+                          ),
+                          dl(
+                            cls := "border-top",
+                            div(
+                              cls := "border-bottom flow region",
+                              dt("Documentation"),
+                              dd(
+                                a(
+                                  href := helpUrl,
+                                  target := "_blank",
+                                  helpUrl
+                                )
+                              )
+                            ),
+                            div(
+                              cls := "flow region",
+                              dt("Affected"),
+                              dd(
+                                details(
+                                  summary(s"$elementCount elements affected across $urlCount pages"),
+                                  ul(
+                                    cls := "flow region",
+                                    occurrences.map(occurrence =>
+                                      li(
+                                        cls := "flow",
+                                        a(
+                                          href := occurrence.url,
+                                          target := "_blank",
+                                          occurrence.url
+                                        ),
+                                        ul(
+                                          cls := "flow",
+                                          role := "list",
+                                          occurrence.snippets.map(html => li(pre(html))).toList
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    }
+                  )
+                )
+              )
+            ),
+            footer(
+              cls := "border-top",
+              role := "contentinfo",
+              div(
+                cls := "repel region wrapper",
+                p(
+                  "© 2023 ",
+                  a(href := s"https://github.com/hmrc/$projectName", target := "_blank", projectName)
+                ),
+                nav(
+                  attr("aria-label") := "secondary navigation",
+                  ul(
+                    cls := "cluster",
+                    role := "list",
+                    li(
+                      a(
+                        href := "https://github.com/hmrc/accessibility/blob/main/README.md",
+                        target := "_blank",
+                        "Guidance"
+                      )
+                    ),
+                    li(
+                      a(href := "https://hmrcdigital.slack.com/archives/C4JQESR8U", target := "_blank", "Support")
+                    ),
+                    li(
+                      a(href := "https://forms.gle/T39z8o6rjfLyHym99", target := "_blank", "Feedback")
+                    ),
+                    li(
+                      a(href := "#", "Back to top")
+                    )
+                  )
+                )
+              )
+            ),
+            script(src := "js/search.min.js")
+          )
+        )
+      )
+      // log results to console
     } else {
-      log.error("No axe results found to generate accessibility assessment report.")
+      logger.error("No axe results found to generate accessibility assessment report.")
     }
   }
 
-  private def pluginResourcesAssetsPath() = {
-    val uri                = getClass.getClassLoader.getResource("assets").toURI
-    val fileSystem         = FileSystems.newFileSystem(uri, Collections.emptyMap(), null)
-    val absoluteAssetsPath = fileSystem.getPath("/assets")
-    absoluteAssetsPath
-  }
 }

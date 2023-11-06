@@ -86,12 +86,7 @@ object TestReportPlugin extends AutoPlugin {
 
       // Group and deduplicate all axe violations
       case class Occurrence(url: String, snippets: Set[String])
-      case class Violation(
-        help: String,
-        helpUrl: String,
-        impact: String,
-        occurrences: List[Occurrence]
-      )
+      case class Violation(help: String, helpUrl: String, impact: String, occurrences: List[Occurrence])
 
       val axeViolationsFiltered = axeViolationsAll.toList
         .groupBy(_("help"))
@@ -198,21 +193,24 @@ object TestReportPlugin extends AutoPlugin {
                     cls := "flow",
                     role := "list",
                     axeViolationsFiltered.map { violation =>
-                      val violationImpact  = violation.impact
-                      val violationHelp    = violation.help
-                      val violationHelpUrl = violation.helpUrl
+                      val impact       = violation.impact
+                      val help         = violation.help
+                      val helpUrl      = violation.helpUrl
+                      val occurrences  = violation.occurrences
+                      val urlCount     = occurrences.length
+                      val elementCount = occurrences.map(occurrence => occurrence.snippets.toList.length).sum
 
                       li(
                         article(
                           cls := "card border",
                           header(
                             cls := "repel region",
-                            h2(violationHelp),
+                            h2(help),
                             span(
                               cls := "tag",
-                              attr("data-impact") := violationImpact,
-                              attr("aria-label") := s"Issue impact is $violationImpact",
-                              violationImpact
+                              attr("data-impact") := impact,
+                              attr("aria-label") := s"Issue impact is $impact",
+                              impact
                             )
                           ),
                           dl(
@@ -222,9 +220,9 @@ object TestReportPlugin extends AutoPlugin {
                               dt("Documentation"),
                               dd(
                                 a(
-                                  href := violationHelpUrl,
+                                  href := helpUrl,
                                   target := "_blank",
-                                  violationHelpUrl
+                                  helpUrl
                                 )
                               )
                             ),
@@ -233,10 +231,10 @@ object TestReportPlugin extends AutoPlugin {
                               dt("Affected"),
                               dd(
                                 details(
-                                  summary("-n- elements affected (-n- unique) across -urls length- pages"),
+                                  summary(s"$elementCount elements affected across $urlCount pages"),
                                   ul(
                                     cls := "flow region",
-                                    violation.occurrences.map(occurrence =>
+                                    occurrences.map(occurrence =>
                                       li(
                                         cls := "flow",
                                         a(

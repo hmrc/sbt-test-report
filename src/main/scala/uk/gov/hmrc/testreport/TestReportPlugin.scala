@@ -50,9 +50,9 @@ object TestReportPlugin extends AutoPlugin {
 
       val projectName         = Keys.name.value
       val isJenkinsBuild      = sys.env.contains("BUILD_ID")
-      val jenkinsBuildId      = sys.env.get("BUILD_ID")
-      val jenkinsBuildUrl     = sys.env.getOrElse("BUILD_URL", "#")
-      val jenkinsBrowser      = sys.env.getOrElse("BROWSER", "#")
+      val jenkinsBuildId      = sys.env.getOrElse("BUILD_ID", "BUILD_ID")
+      val jenkinsBuildUrl     = sys.env.getOrElse("BUILD_URL", "BUILD_URL")
+      val browser             = sys.props.getOrElse("browser", "BROWSER").capitalize
       val htmlReportDirectory = testReportDirectory.value / "accessibility-assessment" / "html-report"
       val htmlReport          = htmlReportDirectory / "index.html"
 
@@ -144,7 +144,7 @@ object TestReportPlugin extends AutoPlugin {
                     a(href := s"https://github.com/hmrc/$projectName", target := "_blank", projectName),
                     " on ",
                     time(attr("datetime") := htmlDateTime, readableDateTime),
-                    if (isJenkinsBuild) s" ($jenkinsBrowser)" else ""
+                    s" ($browser)"
                   )
                 )
               ),

@@ -160,7 +160,7 @@ object TestReportPlugin extends AutoPlugin {
                 cls := "repel region wrapper",
                 a(
                   cls := "brand",
-                  if (isJenkinsBuild) href := s"$jenkinsBuildUrl/Accessibility_20Assessment_20Report/"
+                  if (isJenkinsBuild) href := s"${jenkinsBuildUrl}Accessibility_20Assessment_20Report/"
                   else href := s"$htmlReport",
                   attr("aria-label") := "Accessibility assessment",
                   svg(
@@ -309,7 +309,7 @@ object TestReportPlugin extends AutoPlugin {
       )
 
       if (isJenkinsBuild) {
-        logger.info(s"Wrote accessibility assessment report to $jenkinsBuildUrl/Accessibility_20Assessment_20Report/")
+        logger.info(s"Wrote accessibility assessment report to ${jenkinsBuildUrl}Accessibility_20Assessment_20Report/")
       } else {
         logger.info(s"Wrote accessibility assessment report to file://$htmlReport")
       }

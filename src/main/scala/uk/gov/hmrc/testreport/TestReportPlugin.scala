@@ -149,7 +149,7 @@ object TestReportPlugin extends AutoPlugin {
                   p(
                     if (isJenkinsBuild) a(href := jenkinsBuildUrl, s"#$jenkinsBuildId") else "Local build",
                     " of ",
-                    a(href := s"https://github.com/hmrc/$projectName", target := "_blank" rel := "noreferrer noopener", projectName),
+                    a(href := s"https://github.com/hmrc/$projectName", target := "_blank", rel := "noreferrer noopener", projectName),
                     " on ",
                     time(attr("datetime") := htmlDateTime, readableDateTime),
                     s" ($browser)"

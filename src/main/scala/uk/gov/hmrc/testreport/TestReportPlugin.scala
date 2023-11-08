@@ -24,6 +24,7 @@ import scalatags.Text.tags2.{article, details, nav, summary, time}
 import java.time.ZonedDateTime
 import java.time.format.{DateTimeFormatter, FormatStyle}
 import java.time.temporal.ChronoUnit
+import scala.Console.{GREEN, RED, RESET}
 
 object TestReportPlugin extends AutoPlugin {
 
@@ -46,13 +47,13 @@ object TestReportPlugin extends AutoPlugin {
     val logger              = sbt.Keys.streams.value.log
 
     if (os.exists(axeResultsDirectory)) {
-      logger.info("Generating accessibility assessment report ...")
+      logger.info("Analysing accessibility assessment results ...")
 
       val projectName         = Keys.name.value
       val isJenkinsBuild      = sys.env.contains("BUILD_ID")
-      val jenkinsBuildId      = sys.env.get("BUILD_ID")
-      val jenkinsBuildUrl     = sys.env.getOrElse("BUILD_URL", "#")
-      val jenkinsBrowser      = sys.env.getOrElse("BROWSER", "#")
+      val jenkinsBuildId      = sys.env.getOrElse("BUILD_ID", "BUILD_ID")
+      val jenkinsBuildUrl     = sys.env.getOrElse("BUILD_URL", "BUILD_URL")
+      val browser             = sys.props.getOrElse("browser", "BROWSER").capitalize
       val htmlReportDirectory = testReportDirectory.value / "accessibility-assessment" / "html-report"
       val htmlReport          = htmlReportDirectory / "index.html"
 
@@ -111,11 +112,18 @@ object TestReportPlugin extends AutoPlugin {
       // Get total axe violations count
       val axeViolationsCount = axeViolationsFiltered.length
 
+      if (axeViolationsCount > 0) {
+        logger.error(s"${RED}Accessibility assessment: $axeViolationsCount violations$RESET")
+      } else {
+        logger.info(s"${GREEN}Accessibility assessment: $axeViolationsCount violations$RESET")
+      }
+
       // Get current datetime
       val htmlDateTime     = ZonedDateTime.now().truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
       val readableDateTime = ZonedDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG))
 
       // Write HTML document
+      logger.info("Writing accessibility assessment report ...")
       os.write.over(
         os.Path(htmlReport),
         "<!DOCTYPE html>" + html(
@@ -144,7 +152,7 @@ object TestReportPlugin extends AutoPlugin {
                     a(href := s"https://github.com/hmrc/$projectName", target := "_blank", projectName),
                     " on ",
                     time(attr("datetime") := htmlDateTime, readableDateTime),
-                    if (isJenkinsBuild) s" ($jenkinsBrowser)" else ""
+                    s" ($browser)"
                   )
                 )
               ),
@@ -299,9 +307,14 @@ object TestReportPlugin extends AutoPlugin {
           )
         )
       )
-      // log results to console
+
+      if (isJenkinsBuild) {
+        logger.info(s"Wrote accessibility assessment report to $jenkinsBuildUrl/Accessibility_20Assessment_20Report/")
+      } else {
+        logger.info(s"Wrote accessibility assessment report to file://$htmlReport")
+      }
     } else {
-      logger.error("No axe results found to generate accessibility assessment report.")
+      logger.error("No accessibility assessment results to analyse.")
     }
   }
 

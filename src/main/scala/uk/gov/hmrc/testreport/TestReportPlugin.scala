@@ -85,7 +85,7 @@ object TestReportPlugin extends AutoPlugin {
         "html"    -> snippet("html").str
       )
 
-      // Group and deduplicate all axe violations
+      // Group and deduplicate all axe violations, then order violations by impact
       case class Occurrence(url: String, snippets: Set[String])
       case class Violation(help: String, helpUrl: String, impact: String, occurrences: List[Occurrence])
 
@@ -109,8 +109,12 @@ object TestReportPlugin extends AutoPlugin {
         }
         .toList
 
+      val orderByImpact = List("critical", "serious", "moderate", "minor")
+
+      val axeViolations = axeViolationsFiltered.sortBy(violation => orderByImpact.indexOf(violation.impact))
+
       // Get total axe violations count
-      val axeViolationsCount = axeViolationsFiltered.length
+      val axeViolationsCount = axeViolations.length
 
       if (axeViolationsCount > 0) {
         logger.error(s"${RED}Accessibility assessment: $axeViolationsCount violations$RESET")
@@ -206,7 +210,7 @@ object TestReportPlugin extends AutoPlugin {
                     id := "accessibility-assessment",
                     cls := "flow",
                     role := "list",
-                    axeViolationsFiltered.map { violation =>
+                    axeViolations.map { violation =>
                       val impact       = violation.impact
                       val help         = violation.help
                       val helpUrl      = violation.helpUrl

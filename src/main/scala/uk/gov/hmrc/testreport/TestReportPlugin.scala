@@ -336,7 +336,7 @@ object TestReportPlugin extends AutoPlugin {
       )
 
       if (isJenkinsBuild) {
-        logger.info(s"Wrote accessibility assessment report to ${jenkinsBuildUrl}Accessibility_20Assessment_20Report/")
+        logger.info(s"Wrote accessibility assessment report to ${jenkinsBuildUrl}Accessibility_20Assessment_20Report/ ")
       } else {
         logger.info(s"Wrote accessibility assessment report to file://$htmlReport")
       }

@@ -147,7 +147,7 @@ object TestReportPlugin extends AutoPlugin {
                 div(
                   cls := "region wrapper",
                   p(
-                    if (isJenkinsBuild) a(href := jenkinsBuildUrl, s"#$jenkinsBuildId") else "Local build",
+                    if (isJenkinsBuild) a(href := jenkinsBuildUrl, target := "_parent", s"#$jenkinsBuildId") else "Local build",
                     " of ",
                     a(
                       href := s"https://github.com/hmrc/$projectName",
@@ -167,6 +167,7 @@ object TestReportPlugin extends AutoPlugin {
                   cls := "brand",
                   if (isJenkinsBuild) href := s"${jenkinsBuildUrl}Accessibility_20Assessment_20Report/"
                   else href := s"$htmlReport",
+                  target := "_parent",
                   attr("aria-label") := "Accessibility assessment",
                   svg(
                     width := "100",
@@ -319,7 +320,7 @@ object TestReportPlugin extends AutoPlugin {
                       )
                     ),
                     li(
-                      a(href := "#", "Back to top")
+                      a(href := "#", "Back to top", target := "_parent")
                     )
                   )
                 )

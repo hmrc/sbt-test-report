@@ -149,7 +149,12 @@ object TestReportPlugin extends AutoPlugin {
                   p(
                     if (isJenkinsBuild) a(href := jenkinsBuildUrl, s"#$jenkinsBuildId") else "Local build",
                     " of ",
-                    a(href := s"https://github.com/hmrc/$projectName", target := "_blank", rel := "noreferrer noopener", projectName),
+                    a(
+                      href := s"https://github.com/hmrc/$projectName",
+                      target := "_blank",
+                      rel := "noreferrer noopener",
+                      projectName
+                    ),
                     " on ",
                     time(attr("datetime") := htmlDateTime, readableDateTime),
                     s" ($browser)"
@@ -277,7 +282,12 @@ object TestReportPlugin extends AutoPlugin {
                 cls := "repel region wrapper",
                 p(
                   "© 2023 ",
-                  a(href := s"https://github.com/hmrc/$projectName", target := "_blank", rel := "noreferrer noopener", projectName)
+                  a(
+                    href := s"https://github.com/hmrc/$projectName",
+                    target := "_blank",
+                    rel := "noreferrer noopener",
+                    projectName
+                  )
                 ),
                 nav(
                   attr("aria-label") := "secondary navigation",
@@ -293,10 +303,20 @@ object TestReportPlugin extends AutoPlugin {
                       )
                     ),
                     li(
-                      a(href := "https://hmrcdigital.slack.com/archives/C4JQESR8U", target := "_blank", rel := "noreferrer noopener", "Support")
+                      a(
+                        href := "https://hmrcdigital.slack.com/archives/C4JQESR8U",
+                        target := "_blank",
+                        rel := "noreferrer noopener",
+                        "Support"
+                      )
                     ),
                     li(
-                      a(href := "https://forms.gle/T39z8o6rjfLyHym99", target := "_blank", rel := "noreferrer noopener", "Feedback")
+                      a(
+                        href := "https://forms.gle/T39z8o6rjfLyHym99",
+                        target := "_blank",
+                        rel := "noreferrer noopener",
+                        "Feedback"
+                      )
                     ),
                     li(
                       a(href := "#", "Back to top")

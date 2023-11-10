@@ -85,7 +85,7 @@ object TestReportPlugin extends AutoPlugin {
         "html"    -> snippet("html").str
       )
 
-      // Group and deduplicate all axe violations
+      // Group and deduplicate all axe violations, then order violations by impact
       case class Occurrence(url: String, snippets: Set[String])
       case class Violation(help: String, helpUrl: String, impact: String, occurrences: List[Occurrence])
 
@@ -109,8 +109,12 @@ object TestReportPlugin extends AutoPlugin {
         }
         .toList
 
+      val orderByImpact = List("critical", "serious", "moderate", "minor")
+
+      val axeViolations = axeViolationsFiltered.sortBy(violation => orderByImpact.indexOf(violation.impact))
+
       // Get total axe violations count
-      val axeViolationsCount = axeViolationsFiltered.length
+      val axeViolationsCount = axeViolations.length
 
       if (axeViolationsCount > 0) {
         logger.error(s"${RED}Accessibility assessment: $axeViolationsCount violations$RESET")
@@ -147,9 +151,14 @@ object TestReportPlugin extends AutoPlugin {
                 div(
                   cls := "region wrapper",
                   p(
-                    if (isJenkinsBuild) a(href := jenkinsBuildUrl, s"#$jenkinsBuildId") else "Local build",
+                    if (isJenkinsBuild) a(href := jenkinsBuildUrl, target := "_parent", s"#$jenkinsBuildId") else "Local build",
                     " of ",
-                    a(href := s"https://github.com/hmrc/$projectName", target := "_blank", rel := "noreferrer noopener", projectName),
+                    a(
+                      href := s"https://github.com/hmrc/$projectName",
+                      target := "_blank",
+                      rel := "noreferrer noopener",
+                      projectName
+                    ),
                     " on ",
                     time(attr("datetime") := htmlDateTime, readableDateTime),
                     s" ($browser)"
@@ -162,6 +171,7 @@ object TestReportPlugin extends AutoPlugin {
                   cls := "brand",
                   if (isJenkinsBuild) href := s"${jenkinsBuildUrl}Accessibility_20Assessment_20Report/"
                   else href := s"$htmlReport",
+                  target := "_parent",
                   attr("aria-label") := "Accessibility assessment",
                   svg(
                     width := "100",
@@ -200,7 +210,7 @@ object TestReportPlugin extends AutoPlugin {
                     id := "accessibility-assessment",
                     cls := "flow",
                     role := "list",
-                    axeViolationsFiltered.map { violation =>
+                    axeViolations.map { violation =>
                       val impact       = violation.impact
                       val help         = violation.help
                       val helpUrl      = violation.helpUrl
@@ -277,7 +287,12 @@ object TestReportPlugin extends AutoPlugin {
                 cls := "repel region wrapper",
                 p(
                   "© 2023 ",
-                  a(href := s"https://github.com/hmrc/$projectName", target := "_blank", rel := "noreferrer noopener", projectName)
+                  a(
+                    href := s"https://github.com/hmrc/$projectName",
+                    target := "_blank",
+                    rel := "noreferrer noopener",
+                    projectName
+                  )
                 ),
                 nav(
                   attr("aria-label") := "secondary navigation",
@@ -293,13 +308,23 @@ object TestReportPlugin extends AutoPlugin {
                       )
                     ),
                     li(
-                      a(href := "https://hmrcdigital.slack.com/archives/C4JQESR8U", target := "_blank", rel := "noreferrer noopener", "Support")
+                      a(
+                        href := "https://hmrcdigital.slack.com/archives/C4JQESR8U",
+                        target := "_blank",
+                        rel := "noreferrer noopener",
+                        "Support"
+                      )
                     ),
                     li(
-                      a(href := "https://forms.gle/T39z8o6rjfLyHym99", target := "_blank", rel := "noreferrer noopener", "Feedback")
+                      a(
+                        href := "https://forms.gle/T39z8o6rjfLyHym99",
+                        target := "_blank",
+                        rel := "noreferrer noopener",
+                        "Feedback"
+                      )
                     ),
                     li(
-                      a(href := "#", "Back to top")
+                      a(href := "#", "Back to top", target := "_parent")
                     )
                   )
                 )
@@ -311,7 +336,7 @@ object TestReportPlugin extends AutoPlugin {
       )
 
       if (isJenkinsBuild) {
-        logger.info(s"Wrote accessibility assessment report to ${jenkinsBuildUrl}Accessibility_20Assessment_20Report/")
+        logger.info(s"Wrote accessibility assessment report to ${jenkinsBuildUrl}Accessibility_20Assessment_20Report/ ")
       } else {
         logger.info(s"Wrote accessibility assessment report to file://$htmlReport")
       }

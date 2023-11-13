@@ -151,7 +151,8 @@ object TestReportPlugin extends AutoPlugin {
                 div(
                   cls := "region wrapper",
                   p(
-                    if (isJenkinsBuild) a(href := jenkinsBuildUrl, target := "_parent", s"#$jenkinsBuildId") else "Local build",
+                    if (isJenkinsBuild) a(href := jenkinsBuildUrl, target := "_parent", s"#$jenkinsBuildId")
+                    else "Local build",
                     " of ",
                     a(
                       href := s"https://github.com/hmrc/$projectName",
@@ -334,6 +335,10 @@ object TestReportPlugin extends AutoPlugin {
           )
         )
       )
+
+      // Write axe violations count file
+      val axeViolationsCountFile = axeResultsDirectory / "axeViolationsCount.json"
+      os.write.over(axeViolationsCountFile, axeViolationsCount.toString)
 
       if (isJenkinsBuild) {
         logger.info(s"Wrote accessibility assessment report to ${jenkinsBuildUrl}Accessibility_20Assessment_20Report/ ")

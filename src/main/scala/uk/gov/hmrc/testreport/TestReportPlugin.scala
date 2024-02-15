@@ -175,8 +175,8 @@ object TestReportPlugin extends AutoPlugin {
                   target := "_parent",
                   attr("aria-label") := "Accessibility assessment",
                   svg(
-                    width := "100",
-                    height := "100",
+                    width := "100%",
+                    height := "100%",
                     attr("viewBox") := "0 0 100 100",
                     attr("fill") := "currentColor",
                     xmlns := "http://www.w3.org/2000/svg",

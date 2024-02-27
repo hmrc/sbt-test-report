@@ -1,0 +1,12 @@
+{
+  "exclusions": [
+    {
+      "path": "/test-only",
+      "reason": ""
+    },
+    {
+      "path": "",
+      "reason": "Stubbed auth endpoints do not need accessibility testing as it is used purely for testing purposes."
+    }
+  ]
+}

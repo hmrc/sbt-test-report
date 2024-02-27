@@ -1,0 +1,3 @@
+> check
+$ exists target/test-reports/accessibility-assessment/html-report/index.html
+$ exists target/test-reports/accessibility-assessment/html-report/css/report.css

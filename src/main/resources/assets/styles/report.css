@@ -118,6 +118,17 @@ h2 {
     font-weight: 700
 }
 
+.card dl dd details > ul {
+    list-style: disc
+}
+
+.card dl dd pre {
+    background-color: var(--color-light-grey);
+    margin: 0;
+    padding: 1.5ex;
+    white-space: pre-wrap
+}
+
 .report {
     --flow-space: var(--size-step-3)
 }
@@ -130,6 +141,16 @@ h2 {
     line-height: 1;
     padding: .75ex 1ex;
     text-transform: uppercase
+}
+
+.tag-blue, [data-impact=minor] {
+    background: #d2e2f1;
+    color: #144e81
+}
+
+.tag-red, [data-impact=critical], [data-impact=serious] {
+    background-color: #f6d7d2;
+    color: #942514
 }
 
 .tag-yellow, [data-impact=moderate] {

@@ -29,6 +29,7 @@ sbt test
 
 Run scripted sbt tests with
 ```bash
+sbt publishLocal
 sbt scripted
 ```
 

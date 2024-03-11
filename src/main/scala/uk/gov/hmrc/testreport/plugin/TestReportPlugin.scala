@@ -140,14 +140,14 @@ object TestReportPlugin extends AutoPlugin {
         )
 
         if (includedAxeViolations.nonEmpty) {
-          logger.error(s"${RED}Accessibility assessment: ${includedAxeViolations.length} violations found$RESET")
+          logger.error(s"${RED}Accessibility assessment: ${includedViolations.length} violations found$RESET")
         } else {
-          logger.info(s"${GREEN}Accessibility assessment: ${includedAxeViolations.length} violations found$RESET")
+          logger.info(s"${GREEN}Accessibility assessment: ${includedViolations.length} violations found$RESET")
         }
 
         if (excludedAxeViolations.nonEmpty) {
           logger.warn(
-            s"$YELLOW                         : filtered out ${excludedAxeViolations.length} violations$RESET"
+            s"$YELLOW                         : filtered out ${excludedViolations.length} violations$RESET"
           )
         }
 

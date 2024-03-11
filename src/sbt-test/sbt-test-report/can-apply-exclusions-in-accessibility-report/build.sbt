@@ -10,7 +10,12 @@ lazy val root = (project in file("."))
 
       val expectedOutput = "[error] Accessibility assessment: 1 violations found" +
         "\n[warn]                          : filtered out 1 violations"
-      if (!out.contains(expectedOutput)) sys.error("unexpected output: " + out)
+
+      val catProcess = Process("cat target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json")
+      val catOut     = (catProcess !!)
+      val expectedCatOutput = "1"
+
+      if (!out.contains(expectedOutput) || !catOut.trim.equals(expectedCatOutput))  sys.error("unexpected output: " + out)
       ()
     }
   )

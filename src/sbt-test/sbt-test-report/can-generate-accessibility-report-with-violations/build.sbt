@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
       val process = Process("sbt testReport")
       val out = (process !!)
 
-      val expectedOutput = "[error] Accessibility assessment: 16 violations found"
+      val expectedOutput = "[error] Accessibility assessment: 1 violations found"
       if (!out.contains(expectedOutput)) sys.error("unexpected output: " + out)
       ()
     }

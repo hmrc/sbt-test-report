@@ -100,7 +100,8 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
         exclusionRule = None
       ),
       AxeViolation(
-        url = "http://localhost:12804/public-pension-adjustment/annual-allowance/2016-post/check-answers?someQueryParam=blah",
+        url =
+          "http://localhost:12804/public-pension-adjustment/annual-allowance/2016-post/check-answers?someQueryParam=blah",
         help = "All page content should be contained by landmarks",
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",

@@ -27,11 +27,12 @@ import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 object AccessibilityReport {
-  def htmlDateTime(zonedDateTime: ZonedDateTime): String     =
+  def htmlDateTime(zonedDateTime: ZonedDateTime): String =
     zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
 
   def readableDateTime(zonedDateTime: ZonedDateTime): String = {
-    val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG)
+    val formatter = DateTimeFormatter
+      .ofLocalizedDateTime(FormatStyle.LONG)
       .withLocale(Locale.UK)
     zonedDateTime.format(formatter)
   }
@@ -198,7 +199,9 @@ object AccessibilityReport {
         id := "summary",
         attr("aria-live") := "assertive",
         if (includedViolations.isEmpty) "No violations identified."
-        else s"Displaying ${includedViolations.length} outstanding ${if (includedViolations.length > 1) "violations" else "violation"}."
+        else
+          s"Displaying ${includedViolations.length} outstanding ${if (includedViolations.length > 1) "violations"
+            else "violation"}."
       ),
       cards(includedViolations, "violations", "card-violation")
     )
@@ -211,7 +214,9 @@ object AccessibilityReport {
         id := "summary",
         attr("aria-live") := "assertive",
         if (excludedViolations.isEmpty) "No violations were excluded."
-        else s"Displaying ${excludedViolations.length} excluded ${if (excludedViolations.length > 1) "violations" else "violation"}."
+        else
+          s"Displaying ${excludedViolations.length} excluded ${if (excludedViolations.length > 1) "violations"
+            else "violation"}."
       ),
       cards(excludedViolations, "excludedPaths")
     )

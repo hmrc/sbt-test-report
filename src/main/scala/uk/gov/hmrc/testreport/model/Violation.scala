@@ -16,15 +16,21 @@
 
 package uk.gov.hmrc.testreport.model
 
-case class Violation(description: String, helpUrl: String, impact: String, occurrences: List[Occurrence], exclusionRules: Set[ExclusionRule] = Set.empty)
+case class Violation(
+  description: String,
+  helpUrl: String,
+  impact: String,
+  occurrences: List[Occurrence],
+  exclusionRules: Set[ExclusionRule] = Set.empty
+)
 
 object Violation {
 
-  private val orderByImpact: List[String] = List("critical", "serious", "moderate", "minor")
+  private val orderByImpact: List[String]          = List("critical", "serious", "moderate", "minor")
   implicit val impactOrdering: Ordering[Violation] = Ordering.by(violation => orderByImpact.indexOf(violation.impact))
 
   implicit class GroupedViolations(axeViolations: List[AxeViolation]) {
-    def group: List[Violation] = {
+    def group: List[Violation] =
       axeViolations
         .groupBy(_.help)
         .map { case (help, occurrences) =>
@@ -45,7 +51,6 @@ object Violation {
           )
         }
         .toList
-    }
   }
 
 }

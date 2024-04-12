@@ -23,6 +23,6 @@ case class ExclusionRule(path: String, reason: String) {
     "{" +
       s"""\n "path"  : "$path", ${arrow(path)}""" +
       s"""\n "reason": "$reason" ${arrow(reason)}""" +
-    "\n}"
+      "\n}"
   }
 }

@@ -23,20 +23,21 @@ object ExclusionRuleReader {
   type ExcludedViolations = List[AxeViolation]
   type IncludedViolations = List[AxeViolation]
 
-  /**
-   * Enhances a given path string to match anywhere within another string.
-   *
-   * The `matches` method in Scala requires the entire string to match the regex pattern.
-   * This method ensures the path can match any part of a string by:
-   * 1. Prepending `".*"` to the start if not already present, allowing for any characters (or none) before the path.
-   * 2. Appending `".*"` to the end if not already present, allowing for any characters (or none) after the path.
-   *
-   * This modification is necessary because `matches` does not perform partial matches. For simpler substring checks
-   * without regex, consider using `contains`.
-   *
-   * @param str The path string to be enhanced for regex matching.
-   * @return A regex pattern string that matches the given path anywhere within another string.
-   */
+  /** Enhances a given path string to match anywhere within another string.
+    *
+    * The `matches` method in Scala requires the entire string to match the regex pattern. This method ensures the path
+    * can match any part of a string by:
+    *   1. Prepending `".*"` to the start if not already present, allowing for any characters (or none) before the path.
+    *      2. Appending `".*"` to the end if not already present, allowing for any characters (or none) after the path.
+    *
+    * This modification is necessary because `matches` does not perform partial matches. For simpler substring checks
+    * without regex, consider using `contains`.
+    *
+    * @param str
+    *   The path string to be enhanced for regex matching.
+    * @return
+    *   A regex pattern string that matches the given path anywhere within another string.
+    */
   private def ensureRegexPattern(str: String): String = {
     val withLeading  = if (!str.startsWith(".*")) s".*$str" else str
     val withTrailing = if (!withLeading.endsWith(".*")) s"$withLeading.*" else withLeading

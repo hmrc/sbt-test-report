@@ -20,7 +20,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{BuildDetails, ExclusionRule, Occurrence, Violation}
+import uk.gov.hmrc.testreport.model.{BuildDetails, GlobalExclusionRules, Occurrence, ServiceExclusionRule, Violation}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.jdk.CollectionConverters.*
@@ -137,7 +137,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           )
         ),
         exclusionRules = Set(
-          ExclusionRule("/test-only", "only used for testing")
+          ServiceExclusionRule(Some("/test-only"), "only used for testing")
         )
       ),
       Violation(
@@ -156,8 +156,24 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           )
         ),
         exclusionRules = Set(
-          ExclusionRule("/test-only", "only used for testing"),
-          ExclusionRule("/auth-stub", "auth stub is maintained by another service team")
+          ServiceExclusionRule(Some("/test-only"), "only used for testing"),
+          ServiceExclusionRule(Some("/auth-stub"), "auth stub is maintained by another service team")
+        )
+      ),
+      Violation(
+        description = "All page content should be contained by landmarks",
+        helpUrl = "https://dequeuniversity.com/rules/axe/4.9/region?application=axeAPI",
+        impact = "moderate",
+        occurrences = List(
+          Occurrence(
+            url = "http://localhost:1234/my-service",
+            snippets = Set(
+              """<a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>"""
+            )
+          )
+        ),
+        exclusionRules = Set(
+          GlobalExclusionRules.GovUkSkipLink
         )
       )
     )
@@ -266,12 +282,12 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
 
     "there are excluded violations" should {
       "render a card for each excluded path" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
+        val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByClass("card").size() shouldBe 2
       }
 
       "show the Axe rule as the card heading" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
+        val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByTag("h2").asScala.toList.map(_.text) shouldBe List(
           "Select element must have an accessible name",
           "Document should have one main landmark"
@@ -279,26 +295,29 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
       }
 
       "show the Axe impact as a tag" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
+        val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByClass("tag").asScala.toList.map(_.text) shouldBe List("critical", "moderate")
       }
 
-      "show a table of the excluded rules path and reason" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
+      "show a table of the excluded rules' path, HTML and reason" in new Setup {
+        val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByTag("td").asScala.toList.map(_.text) shouldBe List(
           // first excluded path card
           "/test-only",
+          "",
           "only used for testing",
           // second excluded path card
           "/test-only",
+          "",
           "only used for testing",
           "/auth-stub",
+          "",
           "auth stub is maintained by another service team"
         )
       }
 
       "show a list of affected URLs with affected snippets from each URL" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
+        val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByClass("occurrence-axe-rule-url").asScala.toList.map(_.attr("href")) shouldBe List(
           "http://localhost:9017/test-only",
           "http://localhost:9017/test-only/path/to",

@@ -118,13 +118,15 @@ object AccessibilityReport {
                       thead(
                         tr(
                           th("Excluded Path"),
+                          th("Excluded HTML"),
                           th("Reason")
                         )
                       ),
                       tbody(
                         exclusionRules.toList.map { rule =>
                           tr(
-                            td(rule.path),
+                            td(rule.maybePathRegex.getOrElse("").toString),
+                            td(rule.maybeHtmlRegex.getOrElse("").toString),
                             td(rule.reason)
                           )
                         }
@@ -206,7 +208,7 @@ object AccessibilityReport {
       cards(includedViolations, "violations", "card-violation")
     )
 
-  def excludedPaths(excludedViolations: List[Violation]): Text.TypedTag[String] =
+  def exclusions(excludedViolations: List[Violation]): Text.TypedTag[String] =
     article(
       cls := "flow region wrapper",
       h2("Excluded Violations"),
@@ -218,7 +220,7 @@ object AccessibilityReport {
           s"Displaying ${excludedViolations.length} excluded ${if (excludedViolations.length > 1) "violations"
             else "violation"}."
       ),
-      cards(excludedViolations, "excludedPaths")
+      cards(excludedViolations, "exclusions")
     )
 
   def htmlFooter(buildDetails: BuildDetails): Text.TypedTag[String] =
@@ -283,7 +285,7 @@ object AccessibilityReport {
       reportHeader(buildDetails),
       tag("main")(
         violations(includedViolations),
-        excludedPaths(excludedViolations)
+        exclusions(excludedViolations)
       ),
       htmlFooter(buildDetails)
     )

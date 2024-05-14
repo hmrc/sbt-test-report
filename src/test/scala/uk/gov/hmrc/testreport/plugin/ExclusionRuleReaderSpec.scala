@@ -18,7 +18,7 @@ package uk.gov.hmrc.testreport.plugin
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{AxeViolation, ExclusionRule}
+import uk.gov.hmrc.testreport.model.{AxeViolation, ExclusionRule, GlobalExclusionRules, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
 
 class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
@@ -114,8 +114,8 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
   "ExclusionRuleReader" should {
     "include all violations if no rules match" in new Setup {
       val exclusionRules: List[ExclusionRule] = List(
-        ExclusionRule(
-          path = "/nothing-matched",
+        ServiceExclusionRule(
+          maybePathRegex = Some("/nothing-matched"),
           reason = "Some reason"
         )
       )
@@ -127,12 +127,12 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
 
     "exclude violations if rules match" in new Setup {
       val exclusionRules: List[ExclusionRule] = List(
-        ExclusionRule(
-          path = "/public-pension-adjustment/change-charges",
+        ServiceExclusionRule(
+          maybePathRegex = Some("/public-pension-adjustment/change-charges"),
           reason = "Some reason"
         ),
-        ExclusionRule(
-          path = "/public-pension-adjustment/annual-allowance",
+        ServiceExclusionRule(
+          maybePathRegex = Some("/public-pension-adjustment/annual-allowance"),
           reason = "Some other reason"
         )
       )
@@ -142,18 +142,18 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
       inclViolations.length shouldBe 5
 
       exclViolations.map(_.exclusionRule) shouldBe List(
-        Some(ExclusionRule("/public-pension-adjustment/annual-allowance", "Some other reason")),
-        Some(ExclusionRule("/public-pension-adjustment/annual-allowance", "Some other reason")),
-        Some(ExclusionRule("/public-pension-adjustment/change-charges", "Some reason")),
-        Some(ExclusionRule("/public-pension-adjustment/annual-allowance", "Some other reason")),
-        Some(ExclusionRule("/public-pension-adjustment/annual-allowance", "Some other reason"))
+        Some(ServiceExclusionRule(Some("/public-pension-adjustment/annual-allowance"), "Some other reason")),
+        Some(ServiceExclusionRule(Some("/public-pension-adjustment/annual-allowance"), "Some other reason")),
+        Some(ServiceExclusionRule(Some("/public-pension-adjustment/change-charges"), "Some reason")),
+        Some(ServiceExclusionRule(Some("/public-pension-adjustment/annual-allowance"), "Some other reason")),
+        Some(ServiceExclusionRule(Some("/public-pension-adjustment/annual-allowance"), "Some other reason"))
       )
     }
 
     "exclude violations based on custom regex path" in new Setup {
       val exclusionRules: List[ExclusionRule] = List(
-        ExclusionRule(
-          path = "/public-pension-adjustment/annual-allowance/[0-9]{4}-pre/pension-scheme-[0-9]",
+        ServiceExclusionRule(
+          maybePathRegex = Some("/public-pension-adjustment/annual-allowance/[0-9]{4}-pre/pension-scheme-[0-9]"),
           reason = "Some other reason"
         )
       )
@@ -165,8 +165,8 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
 
     "require exclusion paths containing special characters to be escaped" in new Setup {
       val exclusionRules: List[ExclusionRule] = List(
-        ExclusionRule(
-          path = "/check-answers\\?someQueryParam=blah",
+        ServiceExclusionRule(
+          maybePathRegex = Some("/check-answers\\?someQueryParam=blah"),
           reason = "Some other reason"
         )
       )
@@ -174,6 +174,12 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
       val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, exclusionRules)
       exclViolations.length shouldBe 1
       inclViolations.length shouldBe 9
+    }
+
+    "exclude violations defined in Global Exclusion Rules" in new Setup {
+      val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, GlobalExclusionRules.all)
+      exclViolations.length shouldBe 10
+      inclViolations        shouldBe empty
     }
   }
 }

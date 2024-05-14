@@ -18,7 +18,7 @@ package uk.gov.hmrc.testreport.plugin
 
 import sbt.*
 import uk.gov.hmrc.testreport.model.Violation.GroupedViolations
-import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule}
+import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule, GlobalExclusionRules, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
@@ -65,11 +65,11 @@ object TestReportPlugin extends AutoPlugin {
         )
 
         // Get filter rules from json file in test repo
-        val a11yExclusions: List[ExclusionRule] = if (os.exists(a11yExclusionRulesFile)) {
+        val serviceExclusionRules: List[ExclusionRule] = if (os.exists(a11yExclusionRulesFile)) {
           ujson
             .read(os.read.stream(a11yExclusionRulesFile))("exclusions")
             .arr
-            .map(rule => ExclusionRule(rule("path").str, rule("reason").str))
+            .map(rule => ServiceExclusionRule(Some(rule("path").str), rule("reason").str))
             .toList
         } else {
           List.empty[ExclusionRule]
@@ -101,12 +101,15 @@ object TestReportPlugin extends AutoPlugin {
           logger.error("--------------------------------")
         }
 
-        if (a11yExclusions.exists(_.reason.isEmpty) || a11yExclusions.exists(_.path.isEmpty)) {
+        if (
+          serviceExclusionRules
+            .exists(_.reason.isEmpty) || serviceExclusionRules.exists(_.maybePathRegex.exists(_.isEmpty))
+        ) {
           logger.error(friendlyArmadillo)
           errorTitle()
-          a11yExclusions
-            .filterNot(rule => rule.reason.nonEmpty && rule.path.nonEmpty)
-            .foreach(rule => logger.error(s"$rule"))
+          serviceExclusionRules
+            .filterNot(rule => rule.reason.nonEmpty && rule.maybePathRegex.exists(_.nonEmpty))
+            .foreach(rule => logger.error(rule.withErrorsHighlighted))
           logger.error("________________________________")
         } else {
           // Get all axe violations
@@ -123,8 +126,11 @@ object TestReportPlugin extends AutoPlugin {
             snippet("html").str
           )).toList
 
+          val allExclusionRules = GlobalExclusionRules.all ++ serviceExclusionRules
+
           // partition into violations + excluded violations
-          val (excludedAxeViolations, includedAxeViolations) = partitionViolations(rawAxeViolations, a11yExclusions)
+          val (excludedAxeViolations, includedAxeViolations) =
+            partitionViolations(rawAxeViolations, allExclusionRules)
 
           // Write HTML document
           logger.info("Writing accessibility assessment report ...")

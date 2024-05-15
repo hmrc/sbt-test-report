@@ -17,26 +17,19 @@
 package uk.gov.hmrc.testreport.model
 
 sealed trait ExclusionRule {
-  val maybePathRegex: Option[String]
-  val maybeHtmlRegex: Option[String]
+  val maybePathRegex: Option[RegexPattern]
+  val maybeHtmlRegex: Option[RegexPattern]
   val reason: String
 
-  // TODO apply these once instead of per violation
-  private def ensureRegexPattern(str: String): String = {
-    val withLeading  = if (!str.startsWith(".*")) s".*$str" else str
-    val withTrailing = if (!withLeading.endsWith(".*")) s"$withLeading.*" else withLeading
-    withTrailing
-  }
-
   def appliesTo(location: Location): Boolean =
-    maybePathRegex.exists(pathRegex => location.url.matches(ensureRegexPattern(pathRegex))) ||
-      maybeHtmlRegex.exists(htmlRegex => location.html.matches(ensureRegexPattern(htmlRegex)))
+    maybePathRegex.exists(_.matches(location.url)) ||
+      maybeHtmlRegex.exists(_.matches(location.html))
 
   def withErrorsHighlighted: String = {
     def arrow(str: String): String =
       if (str.isEmpty) "\t\t<------" else ""
 
-    val path = maybePathRegex.getOrElse("")
+    val path = maybePathRegex.map(_.raw).getOrElse("")
     "{" +
       s"""\n "path"  : "$path", ${arrow(path)}""" +
       s"""\n "reason": "$reason" ${arrow(reason)}""" +
@@ -45,9 +38,9 @@ sealed trait ExclusionRule {
 
 }
 
-case class GlobalExclusionRule(maybeHtmlRegex: Option[String], maybePathRegex: Option[String], reason: String)
+case class GlobalExclusionRule(maybeHtmlRegex: Option[RegexPattern], maybePathRegex: Option[RegexPattern], reason: String)
     extends ExclusionRule
 
-case class ServiceExclusionRule(maybePathRegex: Option[String], reason: String) extends ExclusionRule {
-  val maybeHtmlRegex: Option[String] = None
+case class ServiceExclusionRule(maybePathRegex: Option[RegexPattern], reason: String) extends ExclusionRule {
+  val maybeHtmlRegex: Option[RegexPattern] = None
 }

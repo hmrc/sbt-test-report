@@ -18,7 +18,7 @@ package uk.gov.hmrc.testreport.plugin
 
 import sbt.*
 import uk.gov.hmrc.testreport.model.Violation.GroupedViolations
-import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule, GlobalExclusionRules, ServiceExclusionRule}
+import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule, GlobalExclusionRules, RegexPattern, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
@@ -69,7 +69,7 @@ object TestReportPlugin extends AutoPlugin {
           ujson
             .read(os.read.stream(a11yExclusionRulesFile))("exclusions")
             .arr
-            .map(rule => ServiceExclusionRule(Some(rule("path").str), rule("reason").str))
+            .map(rule => ServiceExclusionRule(Some(RegexPattern(rule("path").str)), rule("reason").str))
             .toList
         } else {
           List.empty[ExclusionRule]
@@ -103,12 +103,12 @@ object TestReportPlugin extends AutoPlugin {
 
         if (
           serviceExclusionRules
-            .exists(_.reason.isEmpty) || serviceExclusionRules.exists(_.maybePathRegex.exists(_.isEmpty))
+            .exists(_.reason.isEmpty) || serviceExclusionRules.exists(_.maybePathRegex.exists(_.raw.isEmpty))
         ) {
           logger.error(friendlyArmadillo)
           errorTitle()
           serviceExclusionRules
-            .filterNot(rule => rule.reason.nonEmpty && rule.maybePathRegex.exists(_.nonEmpty))
+            .filterNot(rule => rule.reason.nonEmpty && rule.maybePathRegex.exists(_.raw.nonEmpty))
             .foreach(rule => logger.error(rule.withErrorsHighlighted))
           logger.error("________________________________")
         } else {

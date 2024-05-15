@@ -125,8 +125,8 @@ object AccessibilityReport {
                       tbody(
                         exclusionRules.toList.map { rule =>
                           tr(
-                            td(rule.maybePathRegex.getOrElse("").toString),
-                            td(rule.maybeHtmlRegex.getOrElse("").toString),
+                            td(rule.maybePathRegex.map(_.raw).getOrElse("").toString),
+                            td(rule.maybeHtmlRegex.map(_.raw).getOrElse("").toString),
                             td(rule.reason)
                           )
                         }

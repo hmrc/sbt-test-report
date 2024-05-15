@@ -20,7 +20,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{BuildDetails, GlobalExclusionRules, Occurrence, ServiceExclusionRule, Violation}
+import uk.gov.hmrc.testreport.model.{BuildDetails, GlobalExclusionRules, Occurrence, RegexPattern, ServiceExclusionRule, Violation}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.jdk.CollectionConverters.*
@@ -120,6 +120,10 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
       )
     )
 
+    val testOnlyRouteExclusion     = ServiceExclusionRule(Some(RegexPattern("/test-only")), "only used for testing")
+    val authLoginStubExclusionRule =
+      ServiceExclusionRule(Some(RegexPattern("/auth-stub")), "auth stub is maintained by another service team")
+
     val excludedViolations: List[Violation] = List(
       Violation(
         description = "Select element must have an accessible name",
@@ -137,7 +141,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           )
         ),
         exclusionRules = Set(
-          ServiceExclusionRule(Some("/test-only"), "only used for testing")
+          testOnlyRouteExclusion
         )
       ),
       Violation(
@@ -156,8 +160,8 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           )
         ),
         exclusionRules = Set(
-          ServiceExclusionRule(Some("/test-only"), "only used for testing"),
-          ServiceExclusionRule(Some("/auth-stub"), "auth stub is maintained by another service team")
+          testOnlyRouteExclusion,
+          authLoginStubExclusionRule
         )
       ),
       Violation(
@@ -321,7 +325,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           "auth stub is maintained by another service team",
           // fourth excluded HTML card
           "",
-          GlobalExclusionRules.GovUkSkipLink.maybeHtmlRegex.get,
+          """<a .*class="govuk-skip-link.*</a>""",
           GlobalExclusionRules.GovUkSkipLink.reason
         )
       }

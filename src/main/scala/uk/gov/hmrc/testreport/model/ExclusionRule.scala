@@ -28,9 +28,9 @@ sealed trait ExclusionRule {
     withTrailing
   }
 
-  def appliesTo(violation: AxeViolation): Boolean =
-    maybePathRegex.exists(pathRegex => violation.url.matches(ensureRegexPattern(pathRegex))) ||
-      maybeHtmlRegex.exists(htmlRegex => violation.html.matches(ensureRegexPattern(htmlRegex)))
+  def appliesTo(location: Location): Boolean =
+    maybePathRegex.exists(pathRegex => location.url.matches(ensureRegexPattern(pathRegex))) ||
+      maybeHtmlRegex.exists(htmlRegex => location.html.matches(ensureRegexPattern(htmlRegex)))
 
   def withErrorsHighlighted: String = {
     def arrow(str: String): String =

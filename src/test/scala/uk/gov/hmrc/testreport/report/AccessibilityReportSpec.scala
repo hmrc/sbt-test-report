@@ -283,20 +283,25 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
     "there are excluded violations" should {
       "render a card for each excluded path" in new Setup {
         val violations: Element = reportHtml.body().getElementById("exclusions")
-        violations.getElementsByClass("card").size() shouldBe 2
+        violations.getElementsByClass("card").size() shouldBe 3
       }
 
       "show the Axe rule as the card heading" in new Setup {
         val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByTag("h2").asScala.toList.map(_.text) shouldBe List(
           "Select element must have an accessible name",
-          "Document should have one main landmark"
+          "Document should have one main landmark",
+          "All page content should be contained by landmarks"
         )
       }
 
       "show the Axe impact as a tag" in new Setup {
         val violations: Element = reportHtml.body().getElementById("exclusions")
-        violations.getElementsByClass("tag").asScala.toList.map(_.text) shouldBe List("critical", "moderate")
+        violations.getElementsByClass("tag").asScala.toList.map(_.text) shouldBe List(
+          "critical",
+          "moderate",
+          "moderate"
+        )
       }
 
       "show a table of the excluded rules' path, HTML and reason" in new Setup {
@@ -310,9 +315,14 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           "/test-only",
           "",
           "only used for testing",
+          // third excluded path card
           "/auth-stub",
           "",
-          "auth stub is maintained by another service team"
+          "auth stub is maintained by another service team",
+          // fourth excluded HTML card
+          "",
+          GlobalExclusionRules.GovUkSkipLink.maybeHtmlRegex.get,
+          GlobalExclusionRules.GovUkSkipLink.reason
         )
       }
 
@@ -322,7 +332,8 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           "http://localhost:9017/test-only",
           "http://localhost:9017/test-only/path/to",
           "http://localhost:9017/auth-stub",
-          "http://localhost:9017/auth-stub/path/to"
+          "http://localhost:9017/auth-stub/path/to",
+          "http://localhost:1234/my-service"
         )
 
         violations

@@ -16,11 +16,7 @@
 
 package uk.gov.hmrc.testreport.model
 
-case class AxeViolation(
-  url: String,
-  help: String,
-  helpUrl: String,
-  impact: String,
-  html: String,
-  exclusionRule: Option[ExclusionRule] = None
-) extends Location
+trait Location {
+  val url: String
+  val html: String
+}

@@ -27,15 +27,22 @@ import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 object AccessibilityReport {
-  private def htmlDateTime(zonedDateTime: ZonedDateTime): String =
-    zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
 
-  private def readableDateTime(zonedDateTime: ZonedDateTime): String = {
-    val formatter = DateTimeFormatter
-      .ofLocalizedDateTime(FormatStyle.LONG)
-      .withLocale(Locale.UK)
-    zonedDateTime.format(formatter)
-  }
+  def htmlReport(
+    buildDetails: BuildDetails,
+    includedViolations: List[Violation],
+    excludedViolations: List[Violation]
+  ): String = "<!DOCTYPE html>" + html(
+    htmlHead(buildDetails, includedViolations.length),
+    body(
+      reportHeader(buildDetails),
+      tag("main")(
+        violations(includedViolations),
+        exclusions(excludedViolations)
+      ),
+      htmlFooter(buildDetails)
+    )
+  )
 
   private def htmlHead(buildDetails: BuildDetails, includedViolationCount: Int): Text.TypedTag[String] =
     head(
@@ -80,6 +87,56 @@ object AccessibilityReport {
       )
     )
 
+  private def htmlDateTime(zonedDateTime: ZonedDateTime): String =
+    zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
+
+  private def readableDateTime(zonedDateTime: ZonedDateTime): String = {
+    val formatter = DateTimeFormatter
+      .ofLocalizedDateTime(FormatStyle.LONG)
+      .withLocale(Locale.UK)
+    zonedDateTime.format(formatter)
+  }
+
+  private def violations(includedViolations: List[Violation]): Text.TypedTag[String] =
+    article(
+      cls := "flow region wrapper no-padding-bottom",
+      div(
+        cls := "heading",
+        h1("Accessibility assessment"),
+        span(
+          cls := "beta-tag",
+          attr("data-beta") := "BETA",
+          attr("aria-label") := s"Beta version",
+          "BETA"
+        )
+      ),
+      h2("Outstanding Violations"),
+      p(
+        id := "summary",
+        attr("aria-live") := "assertive",
+        if (includedViolations.isEmpty) "No violations identified."
+        else
+          s"Displaying ${includedViolations.length} outstanding ${if (includedViolations.length > 1) "violations"
+            else "violation"}."
+      ),
+      cards(includedViolations, "violations", "card-violation")
+    )
+
+  private def exclusions(excludedViolations: List[Violation]): Text.TypedTag[String] =
+    article(
+      cls := "flow region wrapper",
+      h2("Excluded Violations"),
+      p(
+        id := "summary",
+        attr("aria-live") := "assertive",
+        if (excludedViolations.isEmpty) "No violations were excluded."
+        else
+          s"Displaying ${excludedViolations.length} excluded ${if (excludedViolations.length > 1) "violations"
+            else "violation"}."
+      ),
+      cards(excludedViolations, "exclusions")
+    )
+
   private def cards(violations: List[Violation], identity: String, classes: String = ""): Text.TypedTag[String] =
     div(
       cls := "report",
@@ -88,11 +145,10 @@ object AccessibilityReport {
         cls := "flow",
         role := "list",
         violations.map { violation =>
-          val impact         = violation.impact
-          val helpUrl        = violation.helpUrl
-          val occurrences    = violation.occurrences
-          val urlCount       = occurrences.length
-          val elementCount   = occurrences.map(occurrence => occurrence.snippets.toList.length).sum
+          val helpUrl      = violation.helpUrl
+          val occurrences  = violation.occurrences
+          val urlCount     = occurrences.length
+          val elementCount = occurrences.map(occurrence => occurrence.snippets.toList.length).sum
 
           li(
             article(
@@ -100,12 +156,7 @@ object AccessibilityReport {
               header(
                 cls := "repel region",
                 h2(violation.description),
-                span(
-                  cls := "tag",
-                  attr("data-impact") := impact,
-                  attr("aria-label") := s"Violation impact is $impact",
-                  impact
-                )
+                impactTag(violation.impact)
               ),
               dl(
                 cls := "border-top",
@@ -162,7 +213,7 @@ object AccessibilityReport {
                       summary(s"$elementCount elements affected across $urlCount pages"),
                       ul(
                         cls := "flow region",
-                        occurrences.map(occurrence =>
+                        occurrences.map { occurrence =>
                           li(
                             cls := "occurrence flow",
                             a(
@@ -177,7 +228,7 @@ object AccessibilityReport {
                               occurrence.snippets.map(html => li(pre(html))).toList
                             )
                           )
-                        )
+                        }
                       )
                     )
                   )
@@ -189,44 +240,12 @@ object AccessibilityReport {
       )
     )
 
-  private def violations(includedViolations: List[Violation]): Text.TypedTag[String] =
-    article(
-      cls := "flow region wrapper no-padding-bottom",
-      div(
-        cls := "heading",
-        h1("Accessibility assessment"),
-        span(
-          cls := "beta-tag",
-          attr("data-beta") := "BETA",
-          attr("aria-label") := s"Beta version",
-          "BETA"
-        )
-      ),
-      h2("Outstanding Violations"),
-      p(
-        id := "summary",
-        attr("aria-live") := "assertive",
-        if (includedViolations.isEmpty) "No violations identified."
-        else
-          s"Displaying ${includedViolations.length} outstanding ${if (includedViolations.length > 1) "violations"
-            else "violation"}."
-      ),
-      cards(includedViolations, "violations", "card-violation")
-    )
-
-  private def exclusions(excludedViolations: List[Violation]): Text.TypedTag[String] =
-    article(
-      cls := "flow region wrapper",
-      h2("Excluded Violations"),
-      p(
-        id := "summary",
-        attr("aria-live") := "assertive",
-        if (excludedViolations.isEmpty) "No violations were excluded."
-        else
-          s"Displaying ${excludedViolations.length} excluded ${if (excludedViolations.length > 1) "violations"
-            else "violation"}."
-      ),
-      cards(excludedViolations, "exclusions")
+  private def impactTag(impact: String): Text.TypedTag[String] =
+    span(
+      cls := "tag",
+      attr("data-impact") := impact,
+      attr("aria-label") := s"Violation impact is $impact",
+      impact
     )
 
   private def htmlFooter(buildDetails: BuildDetails): Text.TypedTag[String] =
@@ -281,19 +300,4 @@ object AccessibilityReport {
       )
     )
 
-  def htmlReport(
-    buildDetails: BuildDetails,
-    includedViolations: List[Violation],
-    excludedViolations: List[Violation]
-  ): String = "<!DOCTYPE html>" + html(
-    htmlHead(buildDetails, includedViolations.length),
-    body(
-      reportHeader(buildDetails),
-      tag("main")(
-        violations(includedViolations),
-        exclusions(excludedViolations)
-      ),
-      htmlFooter(buildDetails)
-    )
-  )
 }

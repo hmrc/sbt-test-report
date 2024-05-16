@@ -308,35 +308,24 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
         )
       }
 
-      "show a table of the excluded rules' filter type, path, HTML and reason" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("exclusions")
+      "show a table of each excluded rules' filter type, path, HTML and reason" in new Setup {
+        val exclusions: Element = reportHtml.body().getElementById("exclusions")
+        val th = exclusions.getElementsByTag("th").asScala.toList.map(_.text)
+        val td = exclusions.getElementsByTag("td").asScala.toList.map(_.text)
 
-        println(reportHtml.body())
-
-        violations.getElementsByTag("th").asScala.toList.map(_.text) shouldBe List(
-          "Excluded by",
-          "When path matches",
-          "When HTML matches",
-          "Reason"
-        )
-
-        violations.getElementsByTag("td").asScala.toList.map(_.text) shouldBe List(
-          // first excluded path card
-          "Service",
-          "/test-only",
-          "only used for testing",
-          // second excluded path card
-          "Service",
-          "/test-only",
-          "only used for testing",
-          // third excluded path card
-          "Service",
-          "/auth-stub",
-          "auth stub is maintained by another service team",
-          // fourth excluded HTML card
-          "Platform",
-          """<a .*class="govuk-skip-link.*</a>""",
-          PlatformExclusionRules.GovUkSkipLink.reason
+        th.zip(td) shouldBe List(
+          ("Excluded by", "Service"),
+          ("When path matches", "/test-only"),
+          ("Reason", "only used for testing"),
+          ("Excluded by", "Service"),
+          ("When path matches", "/test-only"),
+          ("Reason", "only used for testing"),
+          ("Excluded by", "Service"),
+          ("When path matches", "/auth-stub"),
+          ("Reason", "auth stub is maintained by another service team"),
+          ("Excluded by", "Platform"),
+          ("When HTML matches", """<a .*class="govuk-skip-link.*</a>"""),
+          ("Reason", "Design decision by GOV.UK team - see alphagov/govuk-frontend#1604")
         )
       }
 

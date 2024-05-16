@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.testreport.model
 
-object GlobalExclusionRules {
+object PlatformExclusionRules {
 
   object GovUkBackLink
-      extends GlobalExclusionRule(
+      extends PlatformExclusionRule(
         maybeHtmlRegex = Some(RegexPattern("""<a .*class="govuk-back-link.*</a>""")),
         maybePathRegex = None,
         reason =
@@ -27,14 +27,14 @@ object GlobalExclusionRules {
       )
 
   object GovUkSkipLink
-      extends GlobalExclusionRule(
+      extends PlatformExclusionRule(
         maybeHtmlRegex = Some(RegexPattern("""<a .*class="govuk-skip-link.*</a>""")),
         maybePathRegex = None,
         reason =
           """Design decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/1604">alphagov/govuk-frontend#1604</a>"""
       )
 
-  val all: List[GlobalExclusionRule] = List(
+  val all: List[PlatformExclusionRule] = List(
     GovUkBackLink,
     GovUkSkipLink
   )

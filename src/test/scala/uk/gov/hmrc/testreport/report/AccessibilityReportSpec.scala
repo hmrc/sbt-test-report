@@ -20,7 +20,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{BuildDetails, GlobalExclusionRules, Occurrence, RegexPattern, ServiceExclusionRule, Violation}
+import uk.gov.hmrc.testreport.model.{BuildDetails, PlatformExclusionRules, Occurrence, RegexPattern, ServiceExclusionRule, Violation}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.jdk.CollectionConverters.*
@@ -177,7 +177,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           )
         ),
         exclusionRules = Set(
-          GlobalExclusionRules.GovUkSkipLink
+          PlatformExclusionRules.GovUkSkipLink
         )
       )
     )
@@ -308,25 +308,35 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
         )
       }
 
-      "show a table of the excluded rules' path, HTML and reason" in new Setup {
+      "show a table of the excluded rules' filter type, path, HTML and reason" in new Setup {
         val violations: Element = reportHtml.body().getElementById("exclusions")
+
+        println(reportHtml.body())
+
+        violations.getElementsByTag("th").asScala.toList.map(_.text) shouldBe List(
+          "Excluded by",
+          "When path matches",
+          "When HTML matches",
+          "Reason"
+        )
+
         violations.getElementsByTag("td").asScala.toList.map(_.text) shouldBe List(
           // first excluded path card
+          "Service",
           "/test-only",
-          "",
           "only used for testing",
           // second excluded path card
+          "Service",
           "/test-only",
-          "",
           "only used for testing",
           // third excluded path card
+          "Service",
           "/auth-stub",
-          "",
           "auth stub is maintained by another service team",
           // fourth excluded HTML card
-          "",
+          "Platform",
           """<a .*class="govuk-skip-link.*</a>""",
-          GlobalExclusionRules.GovUkSkipLink.reason
+          PlatformExclusionRules.GovUkSkipLink.reason
         )
       }
 

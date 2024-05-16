@@ -22,7 +22,9 @@ case class Violation(
   impact: String,
   occurrences: List[Occurrence],
   exclusionRules: Set[ExclusionRule] = Set.empty
-)
+) {
+  val isExcluded: Boolean = exclusionRules.nonEmpty
+}
 
 object Violation {
 

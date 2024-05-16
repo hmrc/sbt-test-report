@@ -18,7 +18,7 @@ package uk.gov.hmrc.testreport.plugin
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{AxeViolation, ExclusionRule, GlobalExclusionRules, RegexPattern, ServiceExclusionRule}
+import uk.gov.hmrc.testreport.model.{AxeViolation, ExclusionRule, PlatformExclusionRules, RegexPattern, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
 
 class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
@@ -176,8 +176,8 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
       inclViolations.length shouldBe 9
     }
 
-    "exclude violations defined in Global Exclusion Rules" in new Setup {
-      val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, GlobalExclusionRules.all)
+    "exclude violations defined in Platform Exclusion Rules" in new Setup {
+      val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, PlatformExclusionRules.all)
       exclViolations.length shouldBe 10
       inclViolations        shouldBe empty
     }

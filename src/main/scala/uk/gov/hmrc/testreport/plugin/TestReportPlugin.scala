@@ -18,7 +18,7 @@ package uk.gov.hmrc.testreport.plugin
 
 import sbt.*
 import uk.gov.hmrc.testreport.model.Violation.GroupedViolations
-import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule, GlobalExclusionRules, RegexPattern, ServiceExclusionRule}
+import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule, PlatformExclusionRules, RegexPattern, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
@@ -126,7 +126,7 @@ object TestReportPlugin extends AutoPlugin {
             snippet("html").str
           )).toList
 
-          val allExclusionRules = GlobalExclusionRules.all ++ serviceExclusionRules
+          val allExclusionRules = PlatformExclusionRules.all ++ serviceExclusionRules
 
           // partition into violations + excluded violations
           val (excludedAxeViolations, includedAxeViolations) =

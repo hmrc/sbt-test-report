@@ -22,6 +22,7 @@ import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionFilter
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.Console.{GREEN, RED, RESET, YELLOW}
+import scala.util.Try
 
 object TestReportPlugin extends AutoPlugin with ExclusionFilter {
 
@@ -68,7 +69,12 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
           ujson
             .read(os.read.stream(a11yExclusionRulesFile))("exclusions")
             .arr
-            .map(rule => ServiceExclusionRule(Some(RegexPattern(rule("path").str)), rule("reason").str))
+            .map(rule =>
+              ServiceExclusionRule(
+                Some(RegexPattern(Try(rule("path").str).getOrElse(""))),
+                Try(rule("reason").str).getOrElse("")
+              )
+            )
             .toList
         } else {
           List.empty[ExclusionRule]

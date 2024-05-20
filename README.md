@@ -48,3 +48,8 @@ eg.
 
 Note that the Digital Inclusion and Accessibility Standards team (DIAS) will review these rules as part of an
 internal accessibility assessment, so they should only be used for legitimate purposes.
+
+### Platform exclusion rules
+A centrally-maintained list of platform-wide exclusion rules can be found [here](src/main/scala/uk/gov/hmrc/testreport/model/PlatformExclusionRules.scala).
+This contains commonly-occurring false positives that can be excluded by all services on the platform.
+If you think you've found an issue that belongs in this list, please contact #team-plat-ui on Slack.

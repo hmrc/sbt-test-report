@@ -20,7 +20,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{BuildDetails, PlatformExclusionRules, Occurrence, RegexPattern, ServiceExclusionRule, Violation}
+import uk.gov.hmrc.testreport.model.{BuildDetails, Occurrence, PlatformExclusionRules, RegexPattern, ServiceExclusionRule, Violation}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.jdk.CollectionConverters.*
@@ -310,8 +310,8 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
 
       "show a table of each excluded rules' filter type, path, HTML and reason" in new Setup {
         val exclusions: Element = reportHtml.body().getElementById("exclusions")
-        val th = exclusions.getElementsByTag("th").asScala.toList.map(_.text)
-        val td = exclusions.getElementsByTag("td").asScala.toList.map(_.text)
+        val th                  = exclusions.getElementsByTag("th").asScala.toList.map(_.text)
+        val td                  = exclusions.getElementsByTag("td").asScala.toList.map(_.text)
 
         th.zip(td) shouldBe List(
           ("Excluded by", "Service"),

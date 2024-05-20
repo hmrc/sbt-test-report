@@ -27,9 +27,9 @@ trait ExclusionFilter {
   ): (ExcludedViolations, IncludedViolations) =
     rawAxeViolations
       .foldLeft((List.empty[AxeViolation], List.empty[AxeViolation])) { case ((excluded, included), violation) =>
-        exclusionRules.find(_.appliesTo(violation)) match {
-          case Some(rule) => (excluded :+ violation.copy(exclusionRule = Some(rule)), included)
-          case None       => (excluded, included :+ violation)
+        exclusionRules.filter(_.appliesTo(violation)) match {
+          case Nil   => (excluded, included :+ violation)
+          case rules => (excluded :+ violation.copy(exclusionRules = rules), included)
         }
       }
 }

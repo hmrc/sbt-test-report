@@ -17,7 +17,7 @@
 package uk.gov.hmrc.testreport.model
 
 sealed trait ExclusionRule {
-  val ruleScope: String
+  val scope: String
   val maybePathRegex: Option[RegexPattern]
   val maybeHtmlRegex: Option[RegexPattern]
   val reason: String
@@ -44,10 +44,10 @@ case class PlatformExclusionRule(
   maybePathRegex: Option[RegexPattern],
   reason: String
 ) extends ExclusionRule {
-  final val ruleScope: String = "Platform"
+  final val scope: String = "Platform"
 }
 
 case class ServiceExclusionRule(maybePathRegex: Option[RegexPattern], reason: String) extends ExclusionRule {
-  final val ruleScope: String              = "Service"
+  final val scope: String                  = "Service"
   val maybeHtmlRegex: Option[RegexPattern] = None
 }

@@ -40,7 +40,7 @@ object Violation {
             description = help,
             helpUrl = occurrences.head.helpUrl,
             impact = occurrences.head.impact,
-            exclusionRules = occurrences.flatMap(_.exclusionRule).toSet,
+            exclusionRules = occurrences.flatMap(_.exclusionRules).toSet,
             occurrences = occurrences
               .groupBy(_.url)
               .map { case (url, violations) =>

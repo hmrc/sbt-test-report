@@ -22,5 +22,5 @@ case class AxeViolation(
   helpUrl: String,
   impact: String,
   html: String,
-  exclusionRule: Option[ExclusionRule] = None
+  exclusionRules: List[ExclusionRule] = Nil
 ) extends Location

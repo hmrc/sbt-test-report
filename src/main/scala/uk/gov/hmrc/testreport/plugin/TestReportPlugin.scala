@@ -137,6 +137,19 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
           val (excludedAxeViolations, includedAxeViolations) =
             partitionViolations(rawAxeViolations, allExclusionRules)
 
+          // log excluded violations where a Platform rule shadows a Service rule
+          excludedAxeViolations
+            .filter(_.exclusionRules.map(_.scope).distinct.length > 1)
+            .foreach { violation =>
+              val paths   = violation.exclusionRules
+                .filter(_.scope == "Service")
+                .flatMap(_.maybePathRegex.map(_.raw))
+                .mkString(", ")
+              val warning =
+                s"Service exclusion rule ($paths) shadowed by platform exclusion rule - you may be able to remove it"
+              logger.warn(s"$YELLOW$warning$RESET")
+            }
+
           // Write HTML document
           logger.info("Writing accessibility assessment report ...")
 

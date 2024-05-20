@@ -29,7 +29,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url = "http://localhost:12804/public-pension-adjustment/annual-allowance/2016-post/multiple-schemes",
@@ -37,7 +37,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url = "http://localhost:12804/public-pension-adjustment/lifetime-allowance/enhancement-type",
@@ -45,7 +45,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url = "http://localhost:12804/public-pension-adjustment/pension-saving-statement",
@@ -53,7 +53,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url = "http://localhost:12805/submit-public-pension-adjustment/submission-service/date-of-death-someone-else",
@@ -61,7 +61,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url =
@@ -70,7 +70,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url = "http://localhost:12804/public-pension-adjustment/cannot-use-service",
@@ -78,7 +78,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url = "http://localhost:12804/public-pension-adjustment/change-charges",
@@ -86,7 +86,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url =
@@ -95,7 +95,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       ),
       AxeViolation(
         url =
@@ -104,7 +104,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = None
+        exclusionRules = Nil
       )
     )
   }
@@ -139,18 +139,18 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
       exclViolations.length shouldBe 5
       inclViolations.length shouldBe 5
 
-      exclViolations.map(_.exclusionRule) shouldBe List(
-        Some(
+      exclViolations.map(_.exclusionRules) shouldBe List(
+        List(
           ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
         ),
-        Some(
+        List(
           ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
         ),
-        Some(ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/change-charges")), "Some reason")),
-        Some(
+        List(ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/change-charges")), "Some reason")),
+        List(
           ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
         ),
-        Some(
+        List(
           ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
         )
       )

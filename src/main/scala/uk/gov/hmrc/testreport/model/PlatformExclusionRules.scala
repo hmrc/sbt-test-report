@@ -34,7 +34,15 @@ object PlatformExclusionRules {
           """Design decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/1604">alphagov/govuk-frontend#1604</a>"""
       )
 
+  object AuthLoginStub
+      extends PlatformExclusionRule(
+        maybeHtmlRegex = None,
+        maybePathRegex = Some(RegexPattern("/auth-login-stub/")),
+        reason = "Dummy login service used for local testing"
+      )
+
   val all: List[PlatformExclusionRule] = List(
+    AuthLoginStub,
     GovUkBackLink,
     GovUkSkipLink
   )

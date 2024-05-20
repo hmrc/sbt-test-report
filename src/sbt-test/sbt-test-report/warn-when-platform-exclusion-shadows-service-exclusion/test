@@ -1,0 +1,4 @@
+> check
+$ exists target/test-reports/accessibility-assessment/html-report/index.html
+$ exists target/test-reports/accessibility-assessment/html-report/css/report.css
+$ exists target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json

@@ -168,7 +168,7 @@ object AccessibilityReport {
                         tbody(
                           tr(
                             th(attr("scope") := "row", "Excluded by"),
-                            td(rule.ruleScope)
+                            td(rule.scope)
                           ),
                           rule.maybePathRegex.map { pathRegex =>
                             tr(

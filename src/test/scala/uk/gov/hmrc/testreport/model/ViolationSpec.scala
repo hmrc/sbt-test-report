@@ -31,7 +31,7 @@ class ViolationSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = Some(ServiceExclusionRule(Some(RegexPattern("/test-only")), "test-only page"))
+        exclusionRules = List(ServiceExclusionRule(Some(RegexPattern("/test-only")), "test-only page"))
       ),
       AxeViolation(
         url = "http://localhost:12804/test-only/public-pension-adjustment/change-charges",
@@ -39,7 +39,7 @@ class ViolationSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#main-content" class="govuk-skip-link">Skip to main content</a>""",
-        exclusionRule = Some(ServiceExclusionRule(Some(RegexPattern("/test-only")), "test-only page"))
+        exclusionRules = List(ServiceExclusionRule(Some(RegexPattern("/test-only")), "test-only page"))
       ),
       AxeViolation(
         url = "http://localhost:12804/some-other-service/some-page",
@@ -47,7 +47,7 @@ class ViolationSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#" class="govuk-back-link  js-visible">Back</a>""",
-        exclusionRule = Some(ServiceExclusionRule(Some(RegexPattern("/some-other-service")), "owned by another team"))
+        exclusionRules = List(ServiceExclusionRule(Some(RegexPattern("/some-other-service")), "owned by another team"))
       ),
       AxeViolation(
         url = "http://localhost:12804/some-other-service/some-page",
@@ -55,7 +55,7 @@ class ViolationSpec extends AnyWordSpec with Matchers {
         helpUrl = "https://dequeuniversity.com/rules/axe/4.8/region?application=axeAPI",
         impact = "moderate",
         html = """<a href="#main-content" class="govuk-skip-link">Skip to main content</a>""",
-        exclusionRule = Some(ServiceExclusionRule(Some(RegexPattern("/some-other-service")), "owned by another team"))
+        exclusionRules = List(ServiceExclusionRule(Some(RegexPattern("/some-other-service")), "owned by another team"))
       ),
       AxeViolation(
         url = "http://localhost:12804/public-pension-adjustment/some-page",

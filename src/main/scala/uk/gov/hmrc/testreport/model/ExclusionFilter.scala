@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.testreport.plugin
+package uk.gov.hmrc.testreport.model
 
-import uk.gov.hmrc.testreport.model.{AxeViolation, ExclusionRule}
-
-object ExclusionRuleReader {
+trait ExclusionFilter {
 
   type ExcludedViolations = List[AxeViolation]
   type IncludedViolations = List[AxeViolation]

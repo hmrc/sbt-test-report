@@ -18,7 +18,12 @@ package uk.gov.hmrc.testreport.model
 
 class RegexPattern(val pattern: String) extends AnyVal {
   def matches(candidate: String): Boolean = candidate.matches(pattern)
-  def raw: String                         = pattern.substring(2, pattern.length - 2)
+  def raw: String                         = pattern match {
+    case empty if empty.length == 2 => ""
+    case nonEmpty                   => nonEmpty.substring(2, nonEmpty.length - 2)
+  }
+
+  override def toString: String = s"RegexPattern(raw='$raw', pattern='$pattern')"
 }
 
 object RegexPattern {

@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.testreport.plugin
+package uk.gov.hmrc.testreport.model
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{AxeViolation, ExclusionRule, PlatformExclusionRules, RegexPattern, ServiceExclusionRule}
-import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
 
-class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
+class ExclusionFilterSpec extends AnyWordSpec with Matchers {
 
-  trait Setup {
+  trait Setup extends ExclusionFilter {
     val rawAxeViolations: List[AxeViolation] = List(
       AxeViolation(
         url = "http://localhost:12804/public-pension-adjustment/charges",
@@ -111,7 +109,7 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
     )
   }
 
-  "ExclusionRuleReader" should {
+  "ExclusionFilter" should {
     "include all violations if no rules match" in new Setup {
       val exclusionRules: List[ExclusionRule] = List(
         ServiceExclusionRule(
@@ -142,18 +140,27 @@ class ExclusionRuleReaderSpec extends AnyWordSpec with Matchers {
       inclViolations.length shouldBe 5
 
       exclViolations.map(_.exclusionRule) shouldBe List(
-        Some(ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")),
-        Some(ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")),
+        Some(
+          ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
+        ),
+        Some(
+          ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
+        ),
         Some(ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/change-charges")), "Some reason")),
-        Some(ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")),
-        Some(ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason"))
+        Some(
+          ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
+        ),
+        Some(
+          ServiceExclusionRule(Some(RegexPattern("/public-pension-adjustment/annual-allowance")), "Some other reason")
+        )
       )
     }
 
     "exclude violations based on custom regex path" in new Setup {
       val exclusionRules: List[ExclusionRule] = List(
         ServiceExclusionRule(
-          maybePathRegex = Some(RegexPattern("/public-pension-adjustment/annual-allowance/[0-9]{4}-pre/pension-scheme-[0-9]")),
+          maybePathRegex =
+            Some(RegexPattern("/public-pension-adjustment/annual-allowance/[0-9]{4}-pre/pension-scheme-[0-9]")),
           reason = "Some other reason"
         )
       )

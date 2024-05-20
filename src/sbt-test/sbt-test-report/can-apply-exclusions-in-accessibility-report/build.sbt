@@ -8,14 +8,15 @@ lazy val root = (project in file("."))
       val process = Process("sbt testReport")
       val out     = (process !!)
 
-      val expectedOutput = "[error] Accessibility assessment: 1 violations found" +
-        "\n[warn]                          : filtered out 1 violations"
+      val expectedOutput = "[info] Accessibility assessment: 0 violations found\n" +
+        "[warn] Accessibility assessment: filtered out 1 violations"
 
-      val catProcess = Process("cat target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json")
-      val catOut     = (catProcess !!)
-      val expectedCatOutput = "1"
+      val catProcess        = Process("cat target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json")
+      val catOut            = catProcess !!
+      val expectedCatOutput = "0"
 
-      if (!out.contains(expectedOutput) || !catOut.trim.equals(expectedCatOutput))  sys.error("unexpected output: " + out)
+      if (!out.contains(expectedOutput) || !catOut.trim.equals(expectedCatOutput))
+        sys.error("unexpected output: " + out)
       ()
     }
   )

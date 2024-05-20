@@ -18,13 +18,12 @@ package uk.gov.hmrc.testreport.plugin
 
 import sbt.*
 import uk.gov.hmrc.testreport.model.Violation.GroupedViolations
-import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule, PlatformExclusionRules, RegexPattern, ServiceExclusionRule}
-import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
+import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionFilter, ExclusionRule, PlatformExclusionRules, RegexPattern, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.Console.{GREEN, RED, RESET, YELLOW}
 
-object TestReportPlugin extends AutoPlugin {
+object TestReportPlugin extends AutoPlugin with ExclusionFilter {
 
   override def trigger = allRequirements
 
@@ -149,15 +148,16 @@ object TestReportPlugin extends AutoPlugin {
             htmlReport(buildDetails, includedViolations, excludedViolations)
           )
 
+          val violationCount = s"Accessibility assessment: ${includedViolations.length} violations found"
           if (includedAxeViolations.nonEmpty) {
-            logger.error(s"${RED}Accessibility assessment: ${includedViolations.length} violations found$RESET")
+            logger.error(s"$RED$violationCount$RESET")
           } else {
-            logger.info(s"${GREEN}Accessibility assessment: ${includedViolations.length} violations found$RESET")
+            logger.info(s"$GREEN$violationCount$RESET")
           }
 
           if (excludedAxeViolations.nonEmpty) {
             logger.warn(
-              s"$YELLOW                         : filtered out ${excludedViolations.length} violations$RESET"
+              s"${YELLOW}Accessibility assessment: filtered out ${excludedViolations.length} violations$RESET"
             )
           }
 

@@ -14,7 +14,7 @@ lazy val root = (project in file("."))
           "\n[error]  \"reason\": \"I want to exclude this, but I won't be able to, because service exclusion rules only support paths\" " +
           "\n[error] }"
 
-      if (!out.contains(expected)) sys.error("unexpected output: " + out)
+      if (!out.contains(expected)) sys.error("unexpected output:\n" + out)
       ()
     }
   )

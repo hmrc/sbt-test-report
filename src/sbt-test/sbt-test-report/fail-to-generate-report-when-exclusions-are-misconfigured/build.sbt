@@ -18,7 +18,7 @@ lazy val root = (project in file("."))
         "\n[error]  \"reason\": \"Stubbed auth endpoints do not need accessibility testing as it is used purely for testing purposes.\" " +
         "\n[error] }"
 
-      if (!out.contains(expected)) sys.error("unexpected output: " + out)
+      if (!out.contains(expected)) sys.error("unexpected output:\n" + out)
       ()
     }
   )

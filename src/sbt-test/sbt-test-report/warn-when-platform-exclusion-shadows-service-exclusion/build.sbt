@@ -12,7 +12,7 @@ lazy val root = (project in file("."))
         "[warn] Service exclusion rule (/auth-login-stub) shadowed by platform exclusion rule - you may be able to remove it"
 
       if (!out.contains(expectedOutput))
-        sys.error("unexpected output: " + out)
+        sys.error("unexpected output:\n" + out)
       ()
     }
   )

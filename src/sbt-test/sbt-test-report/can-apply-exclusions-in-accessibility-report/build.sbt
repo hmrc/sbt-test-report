@@ -15,8 +15,11 @@ lazy val root = (project in file("."))
       val catOut            = catProcess !!
       val expectedCatOutput = "0"
 
-      if (!out.contains(expectedOutput) || !catOut.trim.equals(expectedCatOutput))
-        sys.error("unexpected output: " + out)
+      if (!out.contains(expectedOutput))
+        sys.error("Unexpected output:\n" + out)
+
+      if (!catOut.trim.equals(expectedCatOutput))
+        sys.error("Unexpected violation count: " + catOut)
       ()
     }
   )

@@ -9,7 +9,7 @@ lazy val root = (project in file("."))
       val out = (process !!)
 
       val expectedOutput = "[error] Accessibility assessment: 1 violations found"
-      if (!out.contains(expectedOutput)) sys.error("unexpected output: " + out)
+      if (!out.contains(expectedOutput)) sys.error("unexpected output:\n" + out)
       ()
     }
   )

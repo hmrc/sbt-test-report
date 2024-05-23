@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class ViolationSpec extends AnyWordSpec with Matchers {
 
-  trait Setup extends ExclusionFilter {
+  trait Setup {
     val axeViolations = List(
       AxeViolation(
         url = "http://localhost:12804/test-only/public-pension-adjustment/change-charges",

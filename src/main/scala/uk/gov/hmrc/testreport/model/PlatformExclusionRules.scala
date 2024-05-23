@@ -41,8 +41,16 @@ object PlatformExclusionRules {
         reason = "Dummy login service used for local testing"
       )
 
+  object TestOnlyRoute
+      extends PlatformExclusionRule(
+        maybeHtmlRegex = None,
+        maybePathRegex = Some(RegexPattern("/test-only/")),
+        reason = "test-only routes used to configure services during local testing"
+      )
+
   val all: List[PlatformExclusionRule] = List(
     AuthLoginStub,
+    TestOnlyRoute,
     GovUkBackLink,
     GovUkSkipLink
   )

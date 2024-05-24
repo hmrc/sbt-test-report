@@ -53,3 +53,7 @@ internal accessibility assessment, so they should only be used for legitimate pu
 A centrally-maintained list of platform-wide exclusion rules can be found [here](src/main/scala/uk/gov/hmrc/testreport/model/PlatformExclusionRules.scala).
 This contains commonly-occurring false positives that can be excluded by all services on the platform.
 If you think you've found an issue that belongs in this list, please contact #team-plat-ui on Slack.
+
+## License
+
+This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").

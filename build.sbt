@@ -19,7 +19,8 @@ lazy val root = (project in file("."))
         // Global base is overwritten with <tmp scripted>/global and can not be reconfigured
         // We have to explicitly set all the params that rely on base
         s"-Dsbt.boot.directory=${sbtHome / "boot"}",
-        s"-Dsbt.repository.config=${sbtHome / "repositories"}"
+        s"-Dsbt.repository.config=${sbtHome / "repositories"}",
+        s"-Dsbt.boot.properties=file:///${sbtHome / "sbt.boot.properties"}"
       )
     },
     scriptedBufferLog := false

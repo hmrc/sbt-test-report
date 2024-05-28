@@ -14,15 +14,20 @@ lazy val root = (project in file("."))
       val expectedOutput = "[info] Accessibility assessment: 0 violations found\n" +
         "[warn] Accessibility assessment: filtered out 1 violations"
 
-      val catProcess        = Process("cat target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json")
-      val catOut            = catProcess !!
-      val expectedCatOutput = "0"
+      if (!out.contains(expectedOutput)) {
+        val reportHtmlProcess = Process("cat target/test-reports/accessibility-assessment/html-report/index.html")
+        val reportHtml        = reportHtmlProcess !!
 
-      if (!out.contains(expectedOutput))
-        sys.error("Unexpected output:\n" + out)
+        sys.error("Unexpected output:\n" + out + "\nReport HTML:\n" + reportHtml)
+      }
 
-      if (!catOut.trim.equals(expectedCatOutput))
-        sys.error("Unexpected violation count: " + catOut)
+      val violationsCountProcess  =
+        Process("cat target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json")
+      val violationsCount         = violationsCountProcess !!
+      val expectedViolationsCount = "0"
+
+      if (!violationsCount.trim.equals(expectedViolationsCount))
+        sys.error("Unexpected violation count: " + violationsCount)
       ()
     }
   )

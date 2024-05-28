@@ -9,10 +9,13 @@ lazy val root = (project in file("."))
         str.replaceAll("\u001B\\[[;\\d]*m", "")
 
       val process = Process("sbt testReport")
-      val out = stripAnsiColourCodes(process !!)
+      val out     = stripAnsiColourCodes(process !!)
 
-      val expectedOutput = "[error] Accessibility assessment: 1 violations found"
-      if (!out.contains(expectedOutput)) sys.error("unexpected output:\n" + out)
+      val expectedOutput =
+        "[warn] Service exclusion rule (/auth-login-stub) shadowed by platform exclusion rule - you may be able to remove it"
+
+      if (!out.contains(expectedOutput))
+        sys.error("unexpected output:\n" + out)
       ()
     }
   )

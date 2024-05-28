@@ -18,13 +18,13 @@ package uk.gov.hmrc.testreport.plugin
 
 import sbt.*
 import uk.gov.hmrc.testreport.model.Violation.GroupedViolations
-import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionRule}
-import uk.gov.hmrc.testreport.plugin.ExclusionRuleReader.partitionViolations
+import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionFilter, ExclusionRule, PlatformExclusionRules, RegexPattern, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.Console.{GREEN, RED, RESET, YELLOW}
+import scala.util.Try
 
-object TestReportPlugin extends AutoPlugin {
+object TestReportPlugin extends AutoPlugin with ExclusionFilter {
 
   override def trigger = allRequirements
 
@@ -65,11 +65,16 @@ object TestReportPlugin extends AutoPlugin {
         )
 
         // Get filter rules from json file in test repo
-        val a11yExclusions: List[ExclusionRule] = if (os.exists(a11yExclusionRulesFile)) {
+        val serviceExclusionRules: List[ExclusionRule] = if (os.exists(a11yExclusionRulesFile)) {
           ujson
             .read(os.read.stream(a11yExclusionRulesFile))("exclusions")
             .arr
-            .map(rule => ExclusionRule(rule("path").str, rule("reason").str))
+            .map(rule =>
+              ServiceExclusionRule(
+                Some(RegexPattern(Try(rule("path").str).getOrElse(""))),
+                Try(rule("reason").str).getOrElse("")
+              )
+            )
             .toList
         } else {
           List.empty[ExclusionRule]
@@ -101,12 +106,15 @@ object TestReportPlugin extends AutoPlugin {
           logger.error("--------------------------------")
         }
 
-        if (a11yExclusions.exists(_.reason.isEmpty) || a11yExclusions.exists(_.path.isEmpty)) {
+        if (
+          serviceExclusionRules
+            .exists(_.reason.isEmpty) || serviceExclusionRules.exists(_.maybePathRegex.exists(_.raw.isEmpty))
+        ) {
           logger.error(friendlyArmadillo)
           errorTitle()
-          a11yExclusions
-            .filterNot(rule => rule.reason.nonEmpty && rule.path.nonEmpty)
-            .foreach(rule => logger.error(s"$rule"))
+          serviceExclusionRules
+            .filterNot(rule => rule.reason.nonEmpty && rule.maybePathRegex.exists(_.raw.nonEmpty))
+            .foreach(rule => logger.error(rule.withErrorsHighlighted))
           logger.error("________________________________")
         } else {
           // Get all axe violations
@@ -123,8 +131,27 @@ object TestReportPlugin extends AutoPlugin {
             snippet("html").str
           )).toList
 
+          val allExclusionRules = PlatformExclusionRules.all ++ serviceExclusionRules
+
           // partition into violations + excluded violations
-          val (excludedAxeViolations, includedAxeViolations) = partitionViolations(rawAxeViolations, a11yExclusions)
+          val (excludedAxeViolations, includedAxeViolations) =
+            partitionViolations(rawAxeViolations, allExclusionRules)
+
+          // log excluded violations where a Platform rule shadows a Service rule
+          val shadowedRuleWarnings = excludedAxeViolations
+            .filter(_.exclusionRules.map(_.scope).distinct.length > 1)
+            .map { violation =>
+              val paths = violation.exclusionRules
+                .filter(_.scope == "Service")
+                .flatMap(_.maybePathRegex.map(_.raw))
+                .mkString(", ")
+              s"Service exclusion rule ($paths) shadowed by platform exclusion rule - you may be able to remove it"
+            }
+            .toSet
+
+          shadowedRuleWarnings.foreach { warning =>
+            logger.warn(s"$YELLOW$warning$RESET")
+          }
 
           // Write HTML document
           logger.info("Writing accessibility assessment report ...")
@@ -143,15 +170,16 @@ object TestReportPlugin extends AutoPlugin {
             htmlReport(buildDetails, includedViolations, excludedViolations)
           )
 
+          val violationCount = s"Accessibility assessment: ${includedViolations.length} violations found"
           if (includedAxeViolations.nonEmpty) {
-            logger.error(s"${RED}Accessibility assessment: ${includedViolations.length} violations found$RESET")
+            logger.error(s"$RED$violationCount$RESET")
           } else {
-            logger.info(s"${GREEN}Accessibility assessment: ${includedViolations.length} violations found$RESET")
+            logger.info(s"$GREEN$violationCount$RESET")
           }
 
           if (excludedAxeViolations.nonEmpty) {
             logger.warn(
-              s"$YELLOW                         : filtered out ${excludedViolations.length} violations$RESET"
+              s"${YELLOW}Accessibility assessment: filtered out ${excludedViolations.length} violations$RESET"
             )
           }
 

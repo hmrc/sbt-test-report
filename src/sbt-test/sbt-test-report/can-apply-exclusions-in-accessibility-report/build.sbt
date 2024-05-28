@@ -5,17 +5,29 @@ lazy val root = (project in file("."))
     version := "0.1",
     resolvers += MavenRepository("HMRC-open-artefacts-maven2", "https://open.artefacts.tax.service.gov.uk/maven2"),
     TaskKey[Unit]("check") := {
+      def stripAnsiColourCodes(str: String): String =
+        str.replaceAll("\u001B\\[[;\\d]*m", "")
+
       val process = Process("sbt testReport")
-      val out     = (process !!)
+      val out     = stripAnsiColourCodes(process !!)
 
-      val expectedOutput = "[error] Accessibility assessment: 1 violations found" +
-        "\n[warn]                          : filtered out 1 violations"
+      val expectedOutput = "[info] Accessibility assessment: 0 violations found\n" +
+        "[warn] Accessibility assessment: filtered out 1 violations"
 
-      val catProcess = Process("cat target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json")
-      val catOut     = (catProcess !!)
-      val expectedCatOutput = "1"
+      if (!out.contains(expectedOutput)) {
+        val reportHtmlProcess = Process("cat target/test-reports/accessibility-assessment/html-report/index.html")
+        val reportHtml        = reportHtmlProcess !!
 
-      if (!out.contains(expectedOutput) || !catOut.trim.equals(expectedCatOutput))  sys.error("unexpected output: " + out)
+        sys.error("Unexpected output:\n" + out + "\nReport HTML:\n" + reportHtml)
+      }
+
+      val violationsCountProcess  =
+        Process("cat target/test-reports/accessibility-assessment/axe-results/axeViolationsCount.json")
+      val violationsCount         = violationsCountProcess !!
+      val expectedViolationsCount = "0"
+
+      if (!violationsCount.trim.equals(expectedViolationsCount))
+        sys.error("Unexpected violation count: " + violationsCount)
       ()
     }
   )

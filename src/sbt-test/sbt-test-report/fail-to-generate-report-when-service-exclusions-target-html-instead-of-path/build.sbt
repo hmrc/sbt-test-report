@@ -8,11 +8,17 @@ lazy val root = (project in file("."))
       def stripAnsiColourCodes(str: String): String =
         str.replaceAll("\u001B\\[[;\\d]*m", "")
 
-      val process = Process("sbt testReport")
-      val out = stripAnsiColourCodes(process !!)
 
-      val expectedOutput = "[error] Accessibility assessment: 1 violations found"
-      if (!out.contains(expectedOutput)) sys.error("unexpected output:\n" + out)
+      val process = Process("sbt testReport")
+      val out     = stripAnsiColourCodes(process !!)
+
+      val expected =
+        "[error] {" +
+          "\n[error]  \"path\"  : \"\", \t\t<------" +
+          "\n[error]  \"reason\": \"I want to exclude this, but I won't be able to, because service exclusion rules only support paths\" " +
+          "\n[error] }"
+
+      if (!out.contains(expected)) sys.error("unexpected output:\n" + out)
       ()
     }
   )

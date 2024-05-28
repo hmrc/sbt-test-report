@@ -27,17 +27,24 @@ import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 object AccessibilityReport {
-  def htmlDateTime(zonedDateTime: ZonedDateTime): String =
-    zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
 
-  def readableDateTime(zonedDateTime: ZonedDateTime): String = {
-    val formatter = DateTimeFormatter
-      .ofLocalizedDateTime(FormatStyle.LONG)
-      .withLocale(Locale.UK)
-    zonedDateTime.format(formatter)
-  }
+  def htmlReport(
+    buildDetails: BuildDetails,
+    includedViolations: List[Violation],
+    excludedViolations: List[Violation]
+  ): String = "<!DOCTYPE html>" + html(
+    htmlHead(buildDetails, includedViolations.length),
+    body(
+      reportHeader(buildDetails),
+      tag("main")(
+        violations(includedViolations),
+        exclusions(excludedViolations)
+      ),
+      htmlFooter(buildDetails)
+    )
+  )
 
-  def htmlHead(buildDetails: BuildDetails, includedViolationCount: Int): Text.TypedTag[String] =
+  private def htmlHead(buildDetails: BuildDetails, includedViolationCount: Int): Text.TypedTag[String] =
     head(
       meta(charset := "utf-8"),
       meta(name := "viewport", content := "width=device-width, initial-scale=1"),
@@ -50,7 +57,7 @@ object AccessibilityReport {
       )
     )
 
-  def reportHeader(buildDetails: BuildDetails): Text.TypedTag[String] =
+  private def reportHeader(buildDetails: BuildDetails): Text.TypedTag[String] =
     header(
       cls := "border-bottom",
       role := "banner",
@@ -80,108 +87,17 @@ object AccessibilityReport {
       )
     )
 
-  def cards(violations: List[Violation], identity: String, classes: String = ""): Text.TypedTag[String] =
-    div(
-      cls := "report",
-      ul(
-        id := identity,
-        cls := "flow",
-        role := "list",
-        violations.map { violation =>
-          val impact         = violation.impact
-          val help           = violation.description
-          val helpUrl        = violation.helpUrl
-          val occurrences    = violation.occurrences
-          val exclusionRules = violation.exclusionRules
-          val urlCount       = occurrences.length
-          val elementCount   = occurrences.map(occurrence => occurrence.snippets.toList.length).sum
+  private def htmlDateTime(zonedDateTime: ZonedDateTime): String =
+    zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
 
-          li(
-            article(
-              cls := s"card $classes border",
-              header(
-                cls := "repel region",
-                h2(help),
-                span(
-                  cls := "tag",
-                  attr("data-impact") := impact,
-                  attr("aria-label") := s"Violation impact is $impact",
-                  impact
-                )
-              ),
-              dl(
-                cls := "border-top",
-                if (exclusionRules.nonEmpty) {
-                  div(
-                    cls := "border-bottom flow region",
-                    table(
-                      thead(
-                        tr(
-                          th("Excluded Path"),
-                          th("Reason")
-                        )
-                      ),
-                      tbody(
-                        exclusionRules.toList.map { rule =>
-                          tr(
-                            td(rule.path),
-                            td(rule.reason)
-                          )
-                        }
-                      )
-                    )
-                  )
-                } else {
-                  div(
-                    cls := "border-bottom flow region",
-                    dt("Documentation"),
-                    dd(
-                      a(
-                        cls := "axe-rule-url",
-                        href := helpUrl,
-                        target := "_blank",
-                        rel := "noreferrer noopener",
-                        helpUrl
-                      )
-                    )
-                  )
-                },
-                div(
-                  cls := "flow region",
-                  dt("Affected"),
-                  dd(
-                    details(
-                      summary(s"$elementCount elements affected across $urlCount pages"),
-                      ul(
-                        cls := "flow region",
-                        occurrences.map(occurrence =>
-                          li(
-                            cls := "occurrence flow",
-                            a(
-                              cls := "occurrence-axe-rule-url",
-                              href := occurrence.url,
-                              target := "_blank",
-                              occurrence.url
-                            ),
-                            ul(
-                              cls := "flow",
-                              role := "list",
-                              occurrence.snippets.map(html => li(pre(html))).toList
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        }
-      )
-    )
+  private def readableDateTime(zonedDateTime: ZonedDateTime): String = {
+    val formatter = DateTimeFormatter
+      .ofLocalizedDateTime(FormatStyle.LONG)
+      .withLocale(Locale.UK)
+    zonedDateTime.format(formatter)
+  }
 
-  def violations(includedViolations: List[Violation]): Text.TypedTag[String] =
+  private def violations(includedViolations: List[Violation]): Text.TypedTag[String] =
     article(
       cls := "flow region wrapper no-padding-bottom",
       div(
@@ -206,7 +122,7 @@ object AccessibilityReport {
       cards(includedViolations, "violations", "card-violation")
     )
 
-  def excludedPaths(excludedViolations: List[Violation]): Text.TypedTag[String] =
+  private def exclusions(excludedViolations: List[Violation]): Text.TypedTag[String] =
     article(
       cls := "flow region wrapper",
       h2("Excluded Violations"),
@@ -218,10 +134,121 @@ object AccessibilityReport {
           s"Displaying ${excludedViolations.length} excluded ${if (excludedViolations.length > 1) "violations"
             else "violation"}."
       ),
-      cards(excludedViolations, "excludedPaths")
+      cards(excludedViolations, "exclusions")
     )
 
-  def htmlFooter(buildDetails: BuildDetails): Text.TypedTag[String] =
+  private def cards(violations: List[Violation], identity: String, classes: String = ""): Text.TypedTag[String] =
+    div(
+      cls := "report",
+      ul(
+        id := identity,
+        cls := "flow",
+        role := "list",
+        violations.map { violation =>
+          val helpUrl      = violation.helpUrl
+          val occurrences  = violation.occurrences
+          val urlCount     = occurrences.length
+          val elementCount = occurrences.map(occurrence => occurrence.snippets.toList.length).sum
+
+          li(
+            article(
+              cls := s"card $classes border",
+              header(
+                cls := "repel region",
+                h2(violation.description),
+                impactTag(violation.impact)
+              ),
+              dl(
+                cls := "border-top",
+                if (violation.isExcluded) {
+                  violation.exclusionRules.toList.map { rule =>
+                    div(
+                      cls := "border-bottom flow region",
+                      table(
+                        tbody(
+                          tr(
+                            th(attr("scope") := "row", "Excluded by"),
+                            td(rule.scope)
+                          ),
+                          rule.maybePathRegex.map { pathRegex =>
+                            tr(
+                              th(attr("scope") := "row", "When path matches"),
+                              td(pathRegex.raw.toString)
+                            )
+                          },
+                          rule.maybeHtmlRegex.map { htmlRegex =>
+                            tr(
+                              th(attr("scope") := "row", "When HTML matches"),
+                              td(htmlRegex.raw.toString)
+                            )
+                          },
+                          tr(
+                            th(attr("scope") := "row", "Reason"),
+                            td(raw(rule.reason))
+                          )
+                        )
+                      )
+                    )
+                  }
+                } else {
+                  div(
+                    cls := "border-bottom flow region",
+                    dt("Documentation"),
+                    dd(
+                      a(
+                        cls := "axe-rule-url",
+                        href := helpUrl,
+                        target := "_blank",
+                        rel := "noreferrer noopener",
+                        helpUrl
+                      )
+                    )
+                  )
+                },
+                div(
+                  cls := "flow region",
+                  dt("Affected"),
+                  dd(
+                    details(
+                      summary(s"$elementCount elements affected across $urlCount pages"),
+                      ul(
+                        cls := "flow region",
+                        occurrences.map { occurrence =>
+                          li(
+                            cls := "occurrence flow",
+                            a(
+                              cls := "occurrence-axe-rule-url",
+                              href := occurrence.url,
+                              target := "_blank",
+                              occurrence.url
+                            ),
+                            ul(
+                              cls := "flow",
+                              role := "list",
+                              occurrence.snippets.map(html => li(pre(html))).toList
+                            )
+                          )
+                        }
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        }
+      )
+    )
+
+  private def impactTag(impact: String): Text.TypedTag[String] =
+    span(
+      cls := "tag",
+      attr("data-impact") := impact,
+      attr("aria-label") := s"Violation impact is $impact",
+      impact
+    )
+
+  private def htmlFooter(buildDetails: BuildDetails): Text.TypedTag[String] =
     footer(
       cls := "border-top",
       role := "contentinfo",
@@ -273,19 +300,4 @@ object AccessibilityReport {
       )
     )
 
-  def htmlReport(
-    buildDetails: BuildDetails,
-    includedViolations: List[Violation],
-    excludedViolations: List[Violation]
-  ): String = "<!DOCTYPE html>" + html(
-    htmlHead(buildDetails, includedViolations.length),
-    body(
-      reportHeader(buildDetails),
-      tag("main")(
-        violations(includedViolations),
-        excludedPaths(excludedViolations)
-      ),
-      htmlFooter(buildDetails)
-    )
-  )
 }

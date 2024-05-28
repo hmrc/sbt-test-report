@@ -1,0 +1,8 @@
+{
+  "exclusions": [
+    {
+      "html": "<a>some snippet that teams want to exclude</a>",
+      "reason": "I want to exclude this, but I won't be able to, because service exclusion rules only support paths"
+    }
+  ]
+}

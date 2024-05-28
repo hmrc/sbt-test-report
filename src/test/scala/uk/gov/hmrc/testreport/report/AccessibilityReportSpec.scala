@@ -20,7 +20,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.testreport.model.{BuildDetails, ExclusionRule, Occurrence, Violation}
+import uk.gov.hmrc.testreport.model.{BuildDetails, Occurrence, PlatformExclusionRules, RegexPattern, ServiceExclusionRule, Violation}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
 
 import scala.jdk.CollectionConverters.*
@@ -120,6 +120,10 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
       )
     )
 
+    val testOnlyRouteExclusion     = ServiceExclusionRule(Some(RegexPattern("/test-only")), "only used for testing")
+    val authLoginStubExclusionRule =
+      ServiceExclusionRule(Some(RegexPattern("/auth-stub")), "auth stub is maintained by another service team")
+
     val excludedViolations: List[Violation] = List(
       Violation(
         description = "Select element must have an accessible name",
@@ -137,7 +141,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           )
         ),
         exclusionRules = Set(
-          ExclusionRule("/test-only", "only used for testing")
+          testOnlyRouteExclusion
         )
       ),
       Violation(
@@ -156,8 +160,24 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           )
         ),
         exclusionRules = Set(
-          ExclusionRule("/test-only", "only used for testing"),
-          ExclusionRule("/auth-stub", "auth stub is maintained by another service team")
+          testOnlyRouteExclusion,
+          authLoginStubExclusionRule
+        )
+      ),
+      Violation(
+        description = "All page content should be contained by landmarks",
+        helpUrl = "https://dequeuniversity.com/rules/axe/4.9/region?application=axeAPI",
+        impact = "moderate",
+        occurrences = List(
+          Occurrence(
+            url = "http://localhost:1234/my-service",
+            snippets = Set(
+              """<a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>"""
+            )
+          )
+        ),
+        exclusionRules = Set(
+          PlatformExclusionRules.GovUkSkipLink
         )
       )
     )
@@ -266,44 +286,57 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
 
     "there are excluded violations" should {
       "render a card for each excluded path" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
-        violations.getElementsByClass("card").size() shouldBe 2
+        val violations: Element = reportHtml.body().getElementById("exclusions")
+        violations.getElementsByClass("card").size() shouldBe 3
       }
 
       "show the Axe rule as the card heading" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
+        val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByTag("h2").asScala.toList.map(_.text) shouldBe List(
           "Select element must have an accessible name",
-          "Document should have one main landmark"
+          "Document should have one main landmark",
+          "All page content should be contained by landmarks"
         )
       }
 
       "show the Axe impact as a tag" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
-        violations.getElementsByClass("tag").asScala.toList.map(_.text) shouldBe List("critical", "moderate")
+        val violations: Element = reportHtml.body().getElementById("exclusions")
+        violations.getElementsByClass("tag").asScala.toList.map(_.text) shouldBe List(
+          "critical",
+          "moderate",
+          "moderate"
+        )
       }
 
-      "show a table of the excluded rules path and reason" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
-        violations.getElementsByTag("td").asScala.toList.map(_.text) shouldBe List(
-          // first excluded path card
-          "/test-only",
-          "only used for testing",
-          // second excluded path card
-          "/test-only",
-          "only used for testing",
-          "/auth-stub",
-          "auth stub is maintained by another service team"
+      "show a table of each excluded rules' filter type, path, HTML and reason" in new Setup {
+        val exclusions: Element = reportHtml.body().getElementById("exclusions")
+        val th                  = exclusions.getElementsByTag("th").asScala.toList.map(_.text)
+        val td                  = exclusions.getElementsByTag("td").asScala.toList.map(_.text)
+
+        th.zip(td) shouldBe List(
+          ("Excluded by", "Service"),
+          ("When path matches", "/test-only"),
+          ("Reason", "only used for testing"),
+          ("Excluded by", "Service"),
+          ("When path matches", "/test-only"),
+          ("Reason", "only used for testing"),
+          ("Excluded by", "Service"),
+          ("When path matches", "/auth-stub"),
+          ("Reason", "auth stub is maintained by another service team"),
+          ("Excluded by", "Platform"),
+          ("When HTML matches", """<a .*class="govuk-skip-link.*</a>"""),
+          ("Reason", "Design decision by GOV.UK team - see alphagov/govuk-frontend#1604")
         )
       }
 
       "show a list of affected URLs with affected snippets from each URL" in new Setup {
-        val violations: Element = reportHtml.body().getElementById("excludedPaths")
+        val violations: Element = reportHtml.body().getElementById("exclusions")
         violations.getElementsByClass("occurrence-axe-rule-url").asScala.toList.map(_.attr("href")) shouldBe List(
           "http://localhost:9017/test-only",
           "http://localhost:9017/test-only/path/to",
           "http://localhost:9017/auth-stub",
-          "http://localhost:9017/auth-stub/path/to"
+          "http://localhost:9017/auth-stub/path/to",
+          "http://localhost:1234/my-service"
         )
 
         violations

@@ -33,6 +33,6 @@ sbt publishLocal
 sbt scripted
 ```
 
-## License
-
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
+If you get errors running locally due to missing sbt configuration, you can copy `sbt.boot.properties` from
+[hmrc/build-jenkins-agent](https://github.com/hmrc/build-jenkins-agent/blob/main/sbt_files/sbt.boot.properties)
+into your local `.sbt` directory.

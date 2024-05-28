@@ -1,0 +1,8 @@
+{
+  "exclusions": [
+    {
+      "path": "/auth-login-stub",
+      "reason": "Owned by auth team"
+    }
+  ]
+}

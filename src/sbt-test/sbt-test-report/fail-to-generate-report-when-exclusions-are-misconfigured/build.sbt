@@ -5,8 +5,11 @@ lazy val root = (project in file("."))
     version := "0.1",
     resolvers += MavenRepository("HMRC-open-artefacts-maven2", "https://open.artefacts.tax.service.gov.uk/maven2"),
     TaskKey[Unit]("check") := {
+      def stripAnsiColourCodes(str: String): String =
+        str.replaceAll("\u001B\\[[;\\d]*m", "")
+
       val process = Process("sbt testReport")
-      val out     = (process !!)
+      val out     = stripAnsiColourCodes(process !!)
 
       val expected =
         "[error] {" +
@@ -18,7 +21,7 @@ lazy val root = (project in file("."))
         "\n[error]  \"reason\": \"Stubbed auth endpoints do not need accessibility testing as it is used purely for testing purposes.\" " +
         "\n[error] }"
 
-      if (!out.contains(expected)) sys.error("unexpected output: " + out)
+      if (!out.contains(expected)) sys.error("unexpected output:\n" + out)
       ()
     }
   )

@@ -16,11 +16,20 @@
 
 package uk.gov.hmrc.testreport.model
 
-case class AxeViolation(
-  url: String,
-  help: String,
-  helpUrl: String,
-  impact: String,
-  html: String,
-  exclusionRules: List[ExclusionRule] = Nil
-) extends Location
+trait ExclusionFilter {
+
+  type ExcludedViolations = List[AxeViolation]
+  type IncludedViolations = List[AxeViolation]
+
+  def partitionViolations(
+    rawAxeViolations: List[AxeViolation],
+    exclusionRules: List[ExclusionRule]
+  ): (ExcludedViolations, IncludedViolations) =
+    rawAxeViolations
+      .foldLeft((List.empty[AxeViolation], List.empty[AxeViolation])) { case ((excluded, included), violation) =>
+        exclusionRules.filter(_.appliesTo(violation)) match {
+          case Nil   => (excluded, included :+ violation)
+          case rules => (excluded :+ violation.copy(exclusionRules = rules), included)
+        }
+      }
+}

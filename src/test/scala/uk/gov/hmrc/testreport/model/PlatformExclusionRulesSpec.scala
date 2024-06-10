@@ -59,7 +59,8 @@ class PlatformExclusionRulesSpec extends AnyWordSpec with Matchers with Exclusio
       help = "Elements must only use supported ARIA attributes",
       helpUrl = "https://dequeuniversity.com/rules/axe/4.9/aria-allowed-attr?application=axeAPI",
       impact = "critical",
-      html = """<input class="govuk-radios__input" id="brandName" name="brandName" type="radio" value="true" aria-controls="conditional-brandName" aria-expanded="false">""",
+      html =
+        """<input class="govuk-radios__input" id="brandName" name="brandName" type="radio" value="true" aria-controls="conditional-brandName" aria-expanded="false">""",
       exclusionRules = Nil
     )
   )

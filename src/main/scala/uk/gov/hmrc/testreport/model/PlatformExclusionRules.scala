@@ -49,7 +49,11 @@ object PlatformExclusionRules {
       )
   object AriaAttributesConditionalRevealRadios
       extends PlatformExclusionRule(
-        maybeHtmlRegex = Some(RegexPattern("""<input .*class="govuk-radios__input".*type="radio".* aria-controls="conditional-.*".*aria-expanded=".*>""")),
+        maybeHtmlRegex = Some(
+          RegexPattern(
+            """<input .*class="govuk-radios__input".*type="radio".* aria-controls="conditional-.*".*aria-expanded=".*>"""
+          )
+        ),
         maybePathRegex = None,
         reason =
           """Decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/979">alphagov/govuk-frontend#979</a>"""

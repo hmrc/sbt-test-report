@@ -53,6 +53,14 @@ class PlatformExclusionRulesSpec extends AnyWordSpec with Matchers with Exclusio
       impact = "moderate",
       html = """<a href="#main-content" class="govuk-skip-link">Skip to main content</a>""",
       exclusionRules = Nil
+    ),
+    AxeViolation(
+      url = "http://localhost:12804/some-service/some-page",
+      help = "Elements must only use supported ARIA attributes",
+      helpUrl = "https://dequeuniversity.com/rules/axe/4.9/aria-allowed-attr?application=axeAPI",
+      impact = "critical",
+      html = """<input class="govuk-radios__input" id="brandName" name="brandName" type="radio" value="true" aria-controls="conditional-brandName" aria-expanded="false">""",
+      exclusionRules = Nil
     )
   )
 
@@ -73,6 +81,10 @@ class PlatformExclusionRulesSpec extends AnyWordSpec with Matchers with Exclusio
 
     "exclude GOV.UK Skip links" in {
       excludedViolations(3).exclusionRules should be(List(PlatformExclusionRules.GovUkSkipLink))
+    }
+
+    "exclude Aria attributes on conditional-reveal radios" in {
+      excludedViolations(4).exclusionRules should be(List(PlatformExclusionRules.AriaAttributesConditionalRevealRadios))
     }
   }
 }

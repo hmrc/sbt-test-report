@@ -34,6 +34,14 @@ object PlatformExclusionRules {
           """Design decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/1604">alphagov/govuk-frontend#1604</a>"""
       )
 
+  object GovUkBreadcrumbs
+      extends PlatformExclusionRule(
+        maybeHtmlRegex = Some(RegexPattern("""<div .*class="govuk-breadcrumbs.*>""")),
+        maybePathRegex = None,
+        reason =
+          """PlatUI to update play-frontend to include updated Breadcrumb Component in govuk-frontend v5.4.1 - see <a href="https://github.com/alphagov/govuk-frontend/pull/4995">Update Breadcrumb component to improve screen reader accessibility #4995</a>"""
+      )
+
   object AuthLoginStub
       extends PlatformExclusionRule(
         maybeHtmlRegex = None,
@@ -64,6 +72,7 @@ object PlatformExclusionRules {
     TestOnlyRoute,
     GovUkBackLink,
     GovUkSkipLink,
-    AriaAttributesConditionalRevealRadios
+    AriaAttributesConditionalRevealRadios,
+    GovUkBreadcrumbs
   )
 }

@@ -117,6 +117,14 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
                  |
                  |</div>""".stripMargin,
         exclusionRules = Nil
+      ),
+      AxeViolation(
+        url = "http://localhost:12804/some-service/some-page",
+        help = "All page content should be contained by landmarks",
+        helpUrl = "https://dequeuniversity.com/rules/axe/4.9/region?application=axeAPI",
+        impact = "moderate",
+        html = """<div class="govuk-breadcrumbs">""",
+        exclusionRules = Nil
       )
     )
   }
@@ -132,7 +140,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
 
       val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, exclusionRules)
       exclViolations.length shouldBe 0
-      inclViolations.length shouldBe 11
+      inclViolations.length shouldBe 12
     }
 
     "exclude violations if rules match" in new Setup {
@@ -149,7 +157,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
 
       val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, exclusionRules)
       exclViolations.length shouldBe 5
-      inclViolations.length shouldBe 6
+      inclViolations.length shouldBe 7
 
       exclViolations.map(_.exclusionRules) shouldBe List(
         List(
@@ -179,7 +187,7 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
 
       val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, exclusionRules)
       exclViolations.length shouldBe 2
-      inclViolations.length shouldBe 9
+      inclViolations.length shouldBe 10
     }
 
     "require exclusion paths containing special characters to be escaped" in new Setup {
@@ -192,12 +200,12 @@ class ExclusionFilterSpec extends AnyWordSpec with Matchers {
 
       val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, exclusionRules)
       exclViolations.length shouldBe 1
-      inclViolations.length shouldBe 10
+      inclViolations.length shouldBe 11
     }
 
     "exclude violations defined in Platform Exclusion Rules" in new Setup {
       val (exclViolations, inclViolations) = partitionViolations(rawAxeViolations, PlatformExclusionRules.all)
-      exclViolations.length shouldBe 11
+      exclViolations.length shouldBe 12
       inclViolations        shouldBe empty
     }
   }

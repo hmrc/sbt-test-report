@@ -17,7 +17,8 @@
 package uk.gov.hmrc.testreport.model
 
 class RegexPattern(val pattern: String) extends AnyVal {
-  def matches(candidate: String): Boolean = candidate.matches(pattern)
+  // Strip newline characters as Javadocs state for . matcher: Any character (may or may not match line terminators)
+  def matches(candidate: String): Boolean = candidate.replace("\n", "").matches(pattern)
   def raw: String                         = pattern match {
     case empty if empty.length == 2 => ""
     case nonEmpty                   => nonEmpty.substring(2, nonEmpty.length - 2)

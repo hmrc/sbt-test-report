@@ -39,7 +39,7 @@ object PlatformExclusionRules {
         maybeHtmlRegex = Some(RegexPattern("""<div .*class="govuk-breadcrumbs.*>""")),
         maybePathRegex = None,
         reason =
-          """PlatUI to update play-frontend to include updated Breadcrumb Component in govuk-frontend v5.4.1 - see <a href="https://github.com/alphagov/govuk-frontend/pull/4995">Update Breadcrumb component to improve screen reader accessibility #4995</a>"""
+          """PlatUI to update play-frontend-hmrc to include updated Breadcrumb Component in govuk-frontend v5.4.1 - see <a href="https://github.com/alphagov/govuk-frontend/pull/4995">Update Breadcrumb component to improve screen reader accessibility #4995</a>"""
       )
 
   object AuthLoginStub

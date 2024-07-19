@@ -62,6 +62,14 @@ class PlatformExclusionRulesSpec extends AnyWordSpec with Matchers with Exclusio
       html =
         """<input class="govuk-radios__input" id="brandName" name="brandName" type="radio" value="true" aria-controls="conditional-brandName" aria-expanded="false">""",
       exclusionRules = Nil
+    ),
+    AxeViolation(
+      url = "http://localhost:12804/some-service/some-page",
+      help = "All page content should be contained by landmarks",
+      helpUrl = "https://dequeuniversity.com/rules/axe/4.9/region?application=axeAPI",
+      impact = "moderate",
+      html = """<div class="govuk-breadcrumbs">""",
+      exclusionRules = Nil
     )
   )
 
@@ -86,6 +94,9 @@ class PlatformExclusionRulesSpec extends AnyWordSpec with Matchers with Exclusio
 
     "exclude Aria attributes on conditional-reveal radios" in {
       excludedViolations(4).exclusionRules should be(List(PlatformExclusionRules.AriaAttributesConditionalRevealRadios))
+    }
+    "exclude GOV.UK BreadCrumb" in {
+      excludedViolations(5).exclusionRules should be(List(PlatformExclusionRules.GovUkBreadcrumbs))
     }
   }
 }

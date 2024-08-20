@@ -17,7 +17,7 @@
 package uk.gov.hmrc.testreport.report
 
 import scalatags.Text
-import scalatags.Text.all.*
+import scalatags.Text.all.{cls, *}
 import scalatags.Text.tags2.{article, details, nav, summary, time}
 import uk.gov.hmrc.testreport.model.{BuildDetails, Violation}
 
@@ -36,6 +36,7 @@ object AccessibilityReport {
     htmlHead(buildDetails, includedViolations.length),
     body(
       reportHeader(buildDetails),
+      feedbackLink,
       tag("main")(
         violations(includedViolations),
         exclusions(excludedViolations)
@@ -87,6 +88,15 @@ object AccessibilityReport {
       )
     )
 
+  private def feedbackLink: Text.TypedTag[String] =
+
+  div( p(textAlign:= "center", "If you have any feedback on using this report, we would love to hear from you. ", a(
+    href := "https://forms.gle/T39z8o6rjfLyHym99",
+    target := "_blank",
+    rel := "noreferrer noopener",
+    "Provide Feedback"
+  )))
+
   private def htmlDateTime(zonedDateTime: ZonedDateTime): String =
     zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
 
@@ -103,12 +113,6 @@ object AccessibilityReport {
       div(
         cls := "heading",
         h1("Accessibility assessment"),
-        span(
-          cls := "beta-tag",
-          attr("data-beta") := "BETA",
-          attr("aria-label") := s"Beta version",
-          "BETA"
-        )
       ),
       h2("Outstanding Violations"),
       p(

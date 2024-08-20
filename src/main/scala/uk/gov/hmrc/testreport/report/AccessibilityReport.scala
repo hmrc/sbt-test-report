@@ -17,7 +17,7 @@
 package uk.gov.hmrc.testreport.report
 
 import scalatags.Text
-import scalatags.Text.all.{cls, *}
+import scalatags.Text.all.*
 import scalatags.Text.tags2.{article, details, nav, summary, time}
 import uk.gov.hmrc.testreport.model.{BuildDetails, Violation}
 

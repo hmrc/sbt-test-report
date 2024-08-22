@@ -36,6 +36,7 @@ object AccessibilityReport {
     htmlHead(buildDetails, includedViolations.length),
     body(
       reportHeader(buildDetails),
+      feedbackLink,
       tag("main")(
         violations(includedViolations),
         exclusions(excludedViolations)
@@ -87,6 +88,22 @@ object AccessibilityReport {
       )
     )
 
+  private def feedbackLink: Text.TypedTag[String] =
+    div(
+      cls := "feedback",
+      role := "feedback",
+      p(
+        textAlign := "center",
+        "If you have any feedback on using this report, we would love to hear from you. ",
+        a(
+          href := "https://forms.gle/T39z8o6rjfLyHym99",
+          target := "_blank",
+          rel := "noreferrer noopener",
+          "Provide Feedback"
+        )
+      )
+    )
+
   private def htmlDateTime(zonedDateTime: ZonedDateTime): String =
     zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)
 
@@ -102,13 +119,7 @@ object AccessibilityReport {
       cls := "flow region wrapper no-padding-bottom",
       div(
         cls := "heading",
-        h1("Accessibility assessment"),
-        span(
-          cls := "beta-tag",
-          attr("data-beta") := "BETA",
-          attr("aria-label") := s"Beta version",
-          "BETA"
-        )
+        h1("Accessibility assessment")
       ),
       h2("Outstanding Violations"),
       p(

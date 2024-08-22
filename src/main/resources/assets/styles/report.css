@@ -95,6 +95,20 @@ h2 {
     color: currentColor
 }
 
+.feedback {
+    background-color: green;
+    color: white;
+    border: 10px solid #000;
+    padding: 20px;
+    margin: 20px;
+    font-size: larger;
+}
+
+.feedback a {
+    color: white;
+    font-size: larger;
+}
+
 .card {
     --border-color: var(--color-mid-grey);
     --region-space: var(--size-step-0)

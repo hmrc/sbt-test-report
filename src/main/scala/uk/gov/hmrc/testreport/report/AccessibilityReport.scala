@@ -89,13 +89,19 @@ object AccessibilityReport {
     )
 
   private def feedbackLink: Text.TypedTag[String] =
-
-  div( p(textAlign:= "center", "If you have any feedback on using this report, we would love to hear from you. ", a(
-    href := "https://forms.gle/T39z8o6rjfLyHym99",
-    target := "_blank",
-    rel := "noreferrer noopener",
-    "Provide Feedback"
-  )))
+    div(cls := "feedback",
+      role := "feedback",
+      p(
+        textAlign := "center",
+        "If you have any feedback on using this report, we would love to hear from you. ",
+        a(
+          href := "https://forms.gle/T39z8o6rjfLyHym99",
+          target := "_blank",
+          rel := "noreferrer noopener",
+          "Provide Feedback"
+        )
+      )
+    )
 
   private def htmlDateTime(zonedDateTime: ZonedDateTime): String =
     zonedDateTime.truncatedTo(ChronoUnit.MILLIS).format(DateTimeFormatter.ISO_INSTANT)

@@ -210,6 +210,11 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
         headTitle           shouldBe s"Accessibility assessment for $projectName"
         headerInfo          shouldBe s"""<a href="$jenkinsBuildUrl" target="_parent">#$jenkinsBuildId</a> of <a href="https://github.com/hmrc/$projectName" target="_blank" rel="noreferrer noopener">service-a</a> on <time datetime="2000-12-01T12:00:00Z">1 December 2000 at 12:00:00 GMT</time> (Chrome)"""
       }
+      "render report feedback banner present" in new Setup {
+        val feedbackLinkBanner: String =
+          reportHtml.body().getElementsByClass("feedback").first().getElementsByTag("p").first().html()
+        feedbackLinkBanner shouldBe s"""If you have any feedback on using this report, we would love to hear from you. <a href="https://forms.gle/T39z8o6rjfLyHym99" target="_blank" rel="noreferrer noopener">Provide Feedback</a>"""
+      }
     }
 
     "built locally" should {
@@ -224,6 +229,13 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
         headMetaIssuesCount shouldBe s"${includedViolations.length} violations identified."
         headTitle           shouldBe s"Accessibility assessment for $projectName"
         headerInfo          shouldBe s"""Local build of <a href="https://github.com/hmrc/$projectName" target="_blank" rel="noreferrer noopener">$projectName</a> on <time datetime="2000-12-01T12:00:00Z">1 December 2000 at 12:00:00 GMT</time> (Chrome)"""
+      }
+      "render report feedback banner present" in new Setup {
+        override val isJenkinsBuild = false
+
+        val feedbackLinkBanner: String =
+          reportHtml.body().getElementsByClass("feedback").first().getElementsByTag("p").first().html()
+        feedbackLinkBanner shouldBe s"""If you have any feedback on using this report, we would love to hear from you. <a href="https://forms.gle/T39z8o6rjfLyHym99" target="_blank" rel="noreferrer noopener">Provide Feedback</a>"""
       }
     }
 

@@ -89,7 +89,8 @@ object AccessibilityReport {
     )
 
   private def feedbackLink: Text.TypedTag[String] =
-    div(cls := "feedback",
+    div(
+      cls := "feedback",
       role := "feedback",
       p(
         textAlign := "center",
@@ -118,7 +119,7 @@ object AccessibilityReport {
       cls := "flow region wrapper no-padding-bottom",
       div(
         cls := "heading",
-        h1("Accessibility assessment"),
+        h1("Accessibility assessment")
       ),
       h2("Outstanding Violations"),
       p(

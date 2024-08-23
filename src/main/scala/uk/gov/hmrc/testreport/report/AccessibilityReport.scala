@@ -91,7 +91,8 @@ object AccessibilityReport {
   private def feedbackLink: Text.TypedTag[String] =
     div(
       cls := "feedback",
-      role := "feedback",
+      role := "region",
+      attr("aria-label") := "feedback",
       p(
         textAlign := "center",
         "If you have any feedback on using this report, we would love to hear from you. ",

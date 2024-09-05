@@ -2,7 +2,7 @@ lazy val root = (project in file("."))
   .enablePlugins(SbtPlugin)
   .settings(
     name := "sbt-test-report",
-    version := "1.4.0", // if bumping major version, need to bump the plugin version in scripted tests to match
+    version := "1.5.0", // if bumping major version, need to bump the plugin version in scripted tests to match
     libraryDependencies ++= Dependencies.compile ++ Dependencies.test,
     sbtPlugin := true,
     isPublicArtefact := true

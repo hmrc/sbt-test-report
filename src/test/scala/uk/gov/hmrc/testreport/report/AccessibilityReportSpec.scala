@@ -208,7 +208,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           reportHtml.body().getElementsByTag("header").first().getElementsByTag("p").first().html()
         headMetaIssuesCount shouldBe s"${includedViolations.length} violations identified."
         headTitle           shouldBe s"Accessibility assessment for $projectName"
-        headerInfo          shouldBe s"""<a href="$jenkinsBuildUrl" target="_parent">#$jenkinsBuildId</a> of <a href="https://github.com/hmrc/$projectName" target="_blank" rel="noreferrer noopener">service-a</a> on <time datetime="2000-12-01T12:00:00Z">1 December 2000 at 12:00:00 GMT</time> (Chrome)"""
+        headerInfo          shouldBe s"""<a href="$jenkinsBuildUrl" target="_parent">#$jenkinsBuildId</a> of <a href="https://github.com/hmrc/$projectName" target="_blank" rel="noreferrer noopener">service-a</a> on <time datetime="2000-12-01T12:00:00Z">1 December 2000, 12:00:00 GMT</time> (Chrome)"""
       }
       "render report feedback banner present" in new Setup {
         val feedbackLinkBanner: String =
@@ -228,7 +228,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
           reportHtml.body().getElementsByTag("header").first().getElementsByTag("p").first().html()
         headMetaIssuesCount shouldBe s"${includedViolations.length} violations identified."
         headTitle           shouldBe s"Accessibility assessment for $projectName"
-        headerInfo          shouldBe s"""Local build of <a href="https://github.com/hmrc/$projectName" target="_blank" rel="noreferrer noopener">$projectName</a> on <time datetime="2000-12-01T12:00:00Z">1 December 2000 at 12:00:00 GMT</time> (Chrome)"""
+        headerInfo          shouldBe s"""Local build of <a href="https://github.com/hmrc/$projectName" target="_blank" rel="noreferrer noopener">$projectName</a> on <time datetime="2000-12-01T12:00:00Z">1 December 2000, 12:00:00 GMT</time> (Chrome)"""
       }
       "render report feedback banner present" in new Setup {
         override val isJenkinsBuild = false

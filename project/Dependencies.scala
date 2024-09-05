@@ -9,7 +9,7 @@ object Dependencies {
   )
 
   val test: Seq[ModuleID] = Seq(
-    "org.scalatest" %% "scalatest" % "3.2.18" % Test,
-    "org.jsoup"      % "jsoup"     % "1.11.3" % Test
+    "org.scalatest" %% "scalatest" % "3.2.19" % Test,
+    "org.jsoup"      % "jsoup"     % "1.18.1" % Test
   )
 }

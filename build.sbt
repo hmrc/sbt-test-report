@@ -1,5 +1,3 @@
-import uk.gov.hmrc.DefaultBuildSettings
-
 lazy val root = (project in file("."))
   .enablePlugins(SbtPlugin)
   .settings(

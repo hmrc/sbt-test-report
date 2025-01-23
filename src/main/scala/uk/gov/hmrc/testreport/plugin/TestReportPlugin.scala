@@ -17,6 +17,7 @@
 package uk.gov.hmrc.testreport.plugin
 
 import sbt.*
+import ujson.Obj
 import uk.gov.hmrc.testreport.model.Violation.GroupedViolations
 import uk.gov.hmrc.testreport.model.{AxeViolation, BuildDetails, ExclusionFilter, ExclusionRule, PlatformExclusionRules, RegexPattern, ServiceExclusionRule}
 import uk.gov.hmrc.testreport.report.AccessibilityReport.htmlReport
@@ -183,9 +184,28 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
             )
           }
 
+          // Calculate the list of violations related to service
+
+          val excludedServiceAxeViolations = excludedAxeViolations.map { violation =>
+            violation.exclusionRules
+              .filter(_.scope == "Service")
+              .flatMap(_.maybePathRegex.map(_.raw))
+              .mkString(", ")
+          }.distinct
+
           // Write axe violations count file
           val axeViolationsCountFile = axeResultsTargetDirectory / "axeViolationsCount.json"
-          os.write.over(axeViolationsCountFile, includedViolations.length.toString)
+
+          // Create a JSON object with the desired key-value pairs
+          val jsonObject = Obj(
+            "browser"                        -> buildDetails.browser,
+            "violationsCount"                -> includedViolations.length.toString,
+            "excludedViolationsCount"        -> excludedViolations.length.toString,
+            "excludedServiceViolationsCount" -> excludedServiceAxeViolations.length.toString
+          )
+
+          // Write the JSON object to the file
+          os.write.over(axeViolationsCountFile, jsonObject.render())
 
           if (buildDetails.isJenkinsBuild) {
             logger.info(

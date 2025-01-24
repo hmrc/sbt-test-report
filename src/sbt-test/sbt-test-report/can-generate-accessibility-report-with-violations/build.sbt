@@ -20,13 +20,13 @@ lazy val root = (project in file("."))
       val violationsCountJson = violationsCountProcess !!
 
       val json = Json.parse(violationsCountJson)
-      val violationsCount = (json \ "violationsCount").as[String]
-      val excludedViolationsCount = (json \ "excludedViolationsCount").as[String]
-      val excludedServiceViolationsCount = (json \ "excludedServiceViolationsCount").as[String]
+      val violationsCount = (json \ "violationsCount").as[Int]
+      val excludedViolationsCount = (json \ "excludedViolationsCount").as[Int]
+      val excludedServiceViolationsCount = (json \ "excludedServiceViolationsCount").as[Int]
 
-      val expectedViolationsCount = "1"
-      val expectedExcludedViolationsCount = "1"
-      val expectedExcludedServiceViolationsCount = "1"
+      val expectedViolationsCount = 1
+      val expectedExcludedViolationsCount = 1
+      val expectedExcludedServiceViolationsCount = 1
 
       // Check values
       if (violationsCount != expectedViolationsCount)

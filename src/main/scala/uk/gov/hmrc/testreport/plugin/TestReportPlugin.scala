@@ -199,9 +199,9 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
           // Create a JSON object with the desired key-value pairs
           val jsonObject = Obj(
             "browser"                        -> buildDetails.browser,
-            "violationsCount"                -> includedViolations.length.toString,
-            "excludedViolationsCount"        -> excludedViolations.length.toString,
-            "excludedServiceViolationsCount" -> excludedServiceAxeViolations.length.toString
+            "violationsCount"                -> includedViolations.length,
+            "excludedViolationsCount"        -> excludedViolations.length,
+            "excludedServiceViolationsCount" -> excludedServiceAxeViolations.length
           )
 
           // Write the JSON object to the file

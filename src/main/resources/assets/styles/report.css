@@ -96,17 +96,13 @@ h2 {
 }
 
 .feedback {
-    background-color: green;
-    color: white;
-    border: 10px solid #000;
-    padding: 20px;
-    margin: 20px;
-    font-size: larger;
+    background-color: #968600;
+    color: #fff;
+    padding: 10px;
 }
 
 .feedback a {
     color: white;
-    font-size: larger;
 }
 
 .card {

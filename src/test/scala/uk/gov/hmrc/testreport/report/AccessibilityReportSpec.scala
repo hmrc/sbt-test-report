@@ -213,7 +213,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
       "render report feedback banner present" in new Setup {
         val feedbackLinkBanner: String =
           reportHtml.body().getElementsByClass("feedback").first().getElementsByTag("p").first().html()
-        feedbackLinkBanner shouldBe s"""If you have any feedback on using this report, we would love to hear from you. <a href="https://forms.gle/T39z8o6rjfLyHym99" target="_blank" rel="noreferrer noopener">Provide Feedback</a>"""
+        feedbackLinkBanner shouldBe s"""If you have any feedback on using this report, we would love to hear from you. <a href="https://forms.gle/tHG7WYXtpdBuxHNF7" target="_blank" rel="noreferrer noopener">Provide Feedback</a>"""
       }
     }
 
@@ -235,7 +235,7 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
 
         val feedbackLinkBanner: String =
           reportHtml.body().getElementsByClass("feedback").first().getElementsByTag("p").first().html()
-        feedbackLinkBanner shouldBe s"""If you have any feedback on using this report, we would love to hear from you. <a href="https://forms.gle/T39z8o6rjfLyHym99" target="_blank" rel="noreferrer noopener">Provide Feedback</a>"""
+        feedbackLinkBanner shouldBe s"""If you have any feedback on using this report, we would love to hear from you. <a href="https://forms.gle/tHG7WYXtpdBuxHNF7" target="_blank" rel="noreferrer noopener">Provide Feedback</a>"""
       }
     }
 

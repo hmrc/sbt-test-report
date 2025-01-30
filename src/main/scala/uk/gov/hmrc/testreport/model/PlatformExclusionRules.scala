@@ -23,7 +23,7 @@ object PlatformExclusionRules {
         maybeHtmlRegex = Some(RegexPattern("""<a .*class="govuk-back-link.*</a>""")),
         maybePathRegex = None,
         reason =
-          """Design decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/1604">alphagov/govuk-frontend#1604</a>"""
+          """Design decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/1604" target="_blank">alphagov/govuk-frontend#1604</a>"""
       )
 
   object GovUkSkipLink
@@ -31,7 +31,7 @@ object PlatformExclusionRules {
         maybeHtmlRegex = Some(RegexPattern("""<a .*class="govuk-skip-link.*</a>""")),
         maybePathRegex = None,
         reason =
-          """Design decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/1604">alphagov/govuk-frontend#1604</a>"""
+          """Design decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/1604" target="_blank">alphagov/govuk-frontend#1604</a>"""
       )
 
   object GovUkBreadcrumbs
@@ -39,7 +39,7 @@ object PlatformExclusionRules {
         maybeHtmlRegex = Some(RegexPattern("""<div .*class="govuk-breadcrumbs.*>""")),
         maybePathRegex = None,
         reason =
-          """PlatUI to update play-frontend-hmrc to include updated Breadcrumb Component in govuk-frontend v5.4.1 - see <a href="https://github.com/alphagov/govuk-frontend/pull/4995">Update Breadcrumb component to improve screen reader accessibility #4995</a>"""
+          """PlatUI to update play-frontend-hmrc to include updated Breadcrumb Component in govuk-frontend v5.4.1 - see <a href="https://github.com/alphagov/govuk-frontend/pull/4995" target="_blank">Update Breadcrumb component to improve screen reader accessibility #4995</a>"""
       )
 
   object AuthLoginStub
@@ -64,7 +64,7 @@ object PlatformExclusionRules {
         ),
         maybePathRegex = None,
         reason =
-          """Decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/979">alphagov/govuk-frontend#979</a>"""
+          """Decision by GOV.UK team - see <a href="https://github.com/alphagov/govuk-frontend/issues/979" target="_blank">alphagov/govuk-frontend#979</a>"""
       )
 
   val all: List[PlatformExclusionRule] = List(

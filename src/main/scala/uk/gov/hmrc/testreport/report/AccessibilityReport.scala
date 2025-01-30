@@ -97,7 +97,7 @@ object AccessibilityReport {
         textAlign := "center",
         "If you have any feedback on using this report, we would love to hear from you. ",
         a(
-          href := "https://forms.gle/T39z8o6rjfLyHym99",
+          href := "https://forms.gle/tHG7WYXtpdBuxHNF7",
           target := "_blank",
           rel := "noreferrer noopener",
           "Provide Feedback"

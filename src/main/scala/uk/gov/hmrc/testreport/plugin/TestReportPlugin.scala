@@ -184,14 +184,14 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
             )
           }
 
-          // Calculate the list of violations related to service
+          // Calculate the list of violations related to service exclusion
 
-          val excludedServiceAxeViolations = excludedAxeViolations.map { violation =>
-            violation.exclusionRules
-              .filter(_.scope == "Service")
-              .flatMap(_.maybePathRegex.map(_.raw))
-              .mkString(", ")
-          }.distinct
+          val (serviceAxeViolations, includedServiceAxeViolations) =
+            partitionViolations(rawAxeViolations, serviceExclusionRules)
+
+          val excludedServiceAxeViolations = serviceAxeViolations.map { violation =>
+            violation.help
+          }.distinct.filter(_.nonEmpty)
 
           // Write axe violations count file
           val axeViolationsCountFile = axeResultsTargetDirectory / "axeViolationsCount.json"

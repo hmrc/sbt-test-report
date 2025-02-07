@@ -26,7 +26,7 @@ lazy val root = (project in file("."))
 
       val expectedViolationsCount = 1
       val expectedExcludedViolationsCount = 1
-      val expectedExcludedServiceViolationsCount = 1
+      val expectedExcludedServiceViolationsCount = 0
 
       // Check values
       if (violationsCount != expectedViolationsCount)

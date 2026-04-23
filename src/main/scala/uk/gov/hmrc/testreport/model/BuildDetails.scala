@@ -24,7 +24,7 @@ case class BuildDetails(
   jenkinsBuildUrl: String,
   isJenkinsBuild: Boolean,
   browser: String,
-  testEngineVersion: String,
   htmlReportFilename: String,
+  testEngineVersion: String,
   creationDateTime: ZonedDateTime = ZonedDateTime.now()
 )

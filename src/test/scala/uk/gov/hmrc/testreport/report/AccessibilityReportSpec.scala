@@ -34,8 +34,8 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
     val jenkinsBuildUrl    = "http://test.com/build/101/"
     val isJenkinsBuild     = true
     val browser            = "Chrome"
-    val testEngineVersion  = "4.7.2"
     val htmlReportFilename = "report.html"
+    val testEngineVersion  = "4.7.2"
     val creationDate       = ZonedDateTime.of(2000, 12, 1, 12, 0, 0, 0, ZoneId.of("GMT"))
 
     val buildDetails: BuildDetails =
@@ -45,8 +45,8 @@ class AccessibilityReportSpec extends AnyWordSpec with Matchers {
         jenkinsBuildUrl,
         isJenkinsBuild,
         browser,
-        testEngineVersion,
         htmlReportFilename,
+        testEngineVersion,
         creationDate
       )
 

@@ -82,7 +82,7 @@ object AccessibilityReport {
               attr("datetime") := htmlDateTime(buildDetails.creationDateTime),
               readableDateTime(buildDetails.creationDateTime)
             ),
-            s" (${buildDetails.browser})"
+            s" (${buildDetails.browser}, axe-core ${buildDetails.testEngineVersion})"
           )
         )
       )

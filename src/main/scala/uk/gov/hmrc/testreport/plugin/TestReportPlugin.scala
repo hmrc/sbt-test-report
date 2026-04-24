@@ -56,13 +56,21 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
         logger.info("Analysing accessibility assessment results ...")
 
         val htmlReportDirectory: File = testReportDirectory.value / "accessibility-assessment" / "html-report"
-        val buildDetails              = BuildDetails(
+
+        val testEngineVersion: String = os
+          .walk(axeResultsTargetDirectory)
+          .find(_.last == "axe-results.json")
+          .flatMap(report => Try(ujson.read(os.read(report))("testEngine")("version").str).toOption)
+          .getOrElse("unknown")
+
+        val buildDetails = BuildDetails(
           projectName = Keys.name.value,
           jenkinsBuildId = sys.env.getOrElse("BUILD_ID", "BUILD_ID"),
           browser = sys.props.getOrElse("browser", "BROWSER").capitalize,
           isJenkinsBuild = sys.env.contains("BUILD_ID"),
           jenkinsBuildUrl = sys.env.getOrElse("BUILD_URL", "BUILD_URL"),
-          htmlReportFilename = (htmlReportDirectory / "index.html").toString
+          htmlReportFilename = (htmlReportDirectory / "index.html").toString,
+          testEngineVersion = testEngineVersion
         )
 
         // Get filter rules from json file in test repo
@@ -186,7 +194,7 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
 
           // Calculate the list of violations related to service exclusion
 
-          val (serviceAxeViolations, includedServiceAxeViolations) =
+          val (serviceAxeViolations, _) =
             partitionViolations(rawAxeViolations, serviceExclusionRules)
 
           val excludedServiceAxeViolations = serviceAxeViolations
@@ -202,6 +210,7 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
           // Create a JSON object with the desired key-value pairs
           val jsonObject = Obj(
             "browser"                        -> buildDetails.browser,
+            "testEngineVersion"              -> testEngineVersion,
             "violationsCount"                -> includedViolations.length,
             "excludedViolationsCount"        -> excludedViolations.length,
             "excludedServiceViolationsCount" -> excludedServiceAxeViolations.length

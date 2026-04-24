@@ -59,7 +59,7 @@ object TestReportPlugin extends AutoPlugin with ExclusionFilter {
 
         val testEngineVersion: String = os
           .walk(axeResultsTargetDirectory)
-          .find(_.last == "axe-results.json")
+          .find(_.last == "axeResults.json")
           .flatMap(report => Try(ujson.read(os.read(report))("testEngine")("version").str).toOption)
           .getOrElse("unknown")
 
